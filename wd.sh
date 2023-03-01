@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 ###
 # Selenium Grid 自动部署脚本
 # 作者：天神
