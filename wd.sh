@@ -12,10 +12,18 @@ YELLOW='\033[0;33m'
 PLAIN='\033[0m'
 BLUE="\033[36m"
 
+# 判断用户是否有权限执行docker命令
 current_user=$(whoami)
-if [ $current_user != "root" ]; then
-    echo -e "${RED}请使用root用户运行此脚本!${PLAIN}"
+if [ $current_user != "root" ]; then # 判断当前用户是否为root
+  if test -z "$(groups $current_user | grep docker)"; then # 判断当前用户是否在docker用户组中(仅适用于Linux)
+    echo -e "${RED}请以docker用户组下的用户或直接使用root用户运行此脚本!${PLAIN}"
     exit 1
+  else
+    echo -e "${YELLOW}Warning:${PLAIN}当前非root用户，但本用户在docker用户组中"
+    echo "脚本将继续运行，如在运行途中遇到docker权限问题请尝试使用root(sudo)运行!"
+    echo ""
+    sleep 1
+  fi
 fi
 
 echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${PLAIN}"
