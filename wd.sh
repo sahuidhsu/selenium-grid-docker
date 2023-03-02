@@ -3,6 +3,7 @@
 # Selenium Grid 自动部署脚本
 # 作者：天神
 # 日期：2023-03-01
+# 更新日期：2023-03-02
 # Copyright © 2023 by 天神, All Rights Reserved.
 ###
 RED='\033[0;31m'
@@ -34,7 +35,30 @@ hub() {
   echo -e "${BLUE}开始准备部署${RED}Hub${BLUE}，即将开始拉取最新版本Hub镜像${PLAIN}"
   sleep 2
   docker pull selenium/hub
-  docker run -d -p 4442:4442 -p 4443:4443 -p 4444:4444 --name wd-hub --log-opt max-size=1m --log-opt max-file=1 --restart=always selenium/hub
+  echo -e "${BLUE}拉取完毕！${PLAIN}"
+  port1=4442
+  echo -e "${BLUE}默认使用${YELLOW}4442${BLUE}端口作为${RED}第一个节点连接端口${PLAIN}"
+  read -p "如需修改请输入新的第一个节点连接端口(留空则使用默认的4442)：" port1_enter
+  if [ "$port1_enter" ] ;then
+    port1=$port1_enter
+    echo -e "已修正${RED}连接端口1${PLAIN}为：${BLUE}" $port1 "${PLAIN}"
+  fi
+  port2=4443
+  echo -e "${BLUE}默认使用${YELLOW}4443${BLUE}端口作为${RED}第二个节点连接端口${PLAIN}"
+  read -p "如需修改请输入新的第二个节点连接端口(留空则使用默认的4443)：" port2_enter
+  if [ "$port2_enter" ] ;then
+    port2=$port2_enter
+    echo -e "已修正${RED}连接端口2${PLAIN}为：${BLUE}" $port2 "${PLAIN}"
+  fi
+  portUI=4444
+  echo -e "${BLUE}默认使用${YELLOW}4444${BLUE}端口作为${RED}WebUI端口${PLAIN}"
+  read -p "如需修改请输入新的WebUI端口(留空则使用默认的4444)：" portUI_enter
+  if [ "$portUI_enter" ] ;then
+    portUI=$portUI_enter
+    echo -e "已修正${RED}WebUI端口${PLAIN}为：${BLUE}" $portUI "${PLAIN}"
+  fi
+  echo docker run -d -p $port1:4442 -p $port2:4443 -p $portUI:4444 --name wd-hub --log-opt max-size=1m --log-opt max-file=1 --restart=always selenium/hub
+#  docker run -d -p $port1:4442 -p $port2:4443 -p $portUI:4444 --name wd-hub --log-opt max-size=1m --log-opt max-file=1 --restart=always selenium/hub
   echo -e "${BLUE}Hub部署完毕${PLAIN}"
 }
 
@@ -57,10 +81,31 @@ node() {
     hub_address=$hub_add
     echo -e "已修正Hub地址为：${BLUE}" $hub_address "${PLAIN}"
   fi
+  port1=4442
+  echo -e "${BLUE}默认使用${YELLOW}4442${BLUE}端口作为${RED}第一个节点连接端口${PLAIN}"
+  read -p "如您的Hub已修改请输入正确的端口(留空则使用默认的4442)：" port1_enter
+  if [ "$port1_enter" ] ;then
+    port1=$port1_enter
+    echo -e "已修正${RED}连接端口1${PLAIN}为：${BLUE}" $port1 "${PLAIN}"
+  fi
+  port2=4443
+  echo -e "${BLUE}默认使用${YELLOW}4443${BLUE}端口作为${RED}第二个节点连接端口${PLAIN}"
+  read -p "如您的Hub已修改请输入正确的端口(留空则使用默认的4443)：" port2_enter
+  if [ "$port2_enter" ] ;then
+    port2=$port2_enter
+    echo -e "已修正${RED}连接端口2${PLAIN}为：${BLUE}" $port2 "${PLAIN}"
+  fi
+  node_port=5556
+  echo -e "${BLUE}默认使用${YELLOW}5556${BLUE}端口作为${RED}当前节点的通讯端口${PLAIN}"
+  read -p "如需修改请输入新的通讯端口(留空则使用默认的5556)：" node_port_enter
+  if [ "$node_port_enter" ] ;then
+    node_port=$node_port_enter
+    echo -e "已修正${RED}当前节点通讯端口${PLAIN}为：${BLUE}" $node_port "${PLAIN}"
+  fi
   read -p "请输入分配的内存(e.g. 512m 或 2g)：" memory
   read -p "请输入最大进程数：" number
   echo -e "${BLUE}开始部署！${PLAIN}"
-  docker run -d --name=wd -p 5556:5556 -p 5919:5900 -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=4442 -e SE_EVENT_BUS_SUBSCRIBE_PORT=4443 -e SE_NODE_PORT=5556 -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always selenium/node-chrome
+  docker run -d --name=wd -p $node_port:$node_port -p 5919:5900 -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always selenium/node-chrome
   echo -e "${BLUE}Node部署完毕${PLAIN}"
 }
 
