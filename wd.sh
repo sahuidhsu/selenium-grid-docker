@@ -3,7 +3,7 @@
 # Selenium Grid 自动部署脚本
 # 作者：天神
 # 日期：2023-03-01
-# 更新日期：2023-03-02
+# 更新日期：2023-03-04
 # Copyright © 2023 by 天神, All Rights Reserved.
 ###
 RED='\033[0;31m'
@@ -12,21 +12,43 @@ YELLOW='\033[0;33m'
 PLAIN='\033[0m'
 BLUE="\033[36m"
 
+not_root() {
+  echo -e "${YELLOW}Warning:${PLAIN}当前非root用户，但本用户似乎可以直接使用docker命令"
+  echo "脚本将继续运行，如在运行途中遇到docker权限问题请尝试使用root(sudo)运行!"
+  echo ""
+  sleep 1
+}
+
 # 判断用户是否有权限执行docker命令
 current_user=$(whoami)
 if [ $current_user != "root" ]; then # 判断当前用户是否为root
-  if test -z "$(groups $current_user | grep docker)"; then # 判断当前用户是否在docker用户组中(仅适用于Linux)
-    echo -e "${RED}请以docker用户组下的用户或直接使用root用户运行此脚本!${PLAIN}"
-    exit 1
+  if [[ $(uname) == "Darwin" ]]; then # 判断当前用户是否为macOS
+    echo -e "${BLUE}已检测到系统为${YELLOW}macOS${PLAIN}"
+    if [ "$(docker info > /dev/null 2>&1; echo $?)" != "0" ]; then
+      echo -e "${RED}当前无法连接到Docker进程${PLAIN}"
+      echo -e "${YELLOW}请检查是否已安装Docker Desktop以及Docker Desktop服务是否已启动！${PLAIN}"
+      echo -e "${RED}如果您确信Docker Desktop已在运行，请尝试使用root(sudo)运行此脚本！${PLAIN}"
+      exit 1
+    else
+      not_root
+    fi
   else
-    echo -e "${YELLOW}Warning:${PLAIN}当前非root用户，但本用户在docker用户组中"
-    echo "脚本将继续运行，如在运行途中遇到docker权限问题请尝试使用root(sudo)运行!"
-    echo ""
-    sleep 1
+    echo -e "${BLUE}已检测到系统为${YELLOW}Linux${PLAIN}"
+    if test -z "$(groups $current_user | grep docker)"; then # 判断当前用户是否在docker用户组中(仅适用于Linux)
+      echo -e "${RED}当前用户非root且不在docker用户组中，没有使用docker的权限${PLAIN}"
+      echo -e "${YELLOW}解决方法：${PLAIN}"
+      echo -e "1.${BLUE}将当前用户加入docker用户组并重新进入终端${YELLOW}(sudo gpasswd -a 用户名 docker)${PLAIN}"
+      echo -e "2.${BLUE}直接使用root(sudo)运行此脚本！${PLAIN}"
+      exit 1
+    else
+      not_root
+    fi
   fi
+  else
+    echo -e "${BLUE}已检测到当前用户为${YELLOW}root${PLAIN}"
 fi
 
-echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${PLAIN}"
+echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V1.2${PLAIN}"
 echo -e "${BLUE}作者：${YELLOW}天神${PLAIN}"
 
 echo -e "${GREEN}开始检查${BLUE}docker${GREEN}环境...${PLAIN}"
