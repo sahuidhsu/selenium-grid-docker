@@ -1,7 +1,7 @@
 #!/bin/bash
 ###
 # Selenium Grid 自动部署脚本
-# 作者：天神
+# 作者：天神(https://tian-shen.me/)
 # 日期：2023-03-01
 # 更新日期：2023-03-04
 # Copyright © 2023 by 天神, All Rights Reserved.
@@ -19,11 +19,14 @@ not_root() {
   sleep 1
 }
 
+mac=false # 判断是否为macOS
+
 # 判断用户是否有权限执行docker命令
 current_user=$(whoami)
 if [ $current_user != "root" ]; then # 判断当前用户是否为root
   if [[ $(uname) == "Darwin" ]]; then # 判断当前用户是否为macOS
     echo -e "${BLUE}已检测到系统为${YELLOW}macOS${PLAIN}"
+    mac=true
     if [ "$(docker info > /dev/null 2>&1; echo $?)" != "0" ]; then
       echo -e "${RED}当前无法连接到Docker进程${PLAIN}"
       echo -e "${YELLOW}请检查是否已安装Docker Desktop以及Docker Desktop服务是否已启动！${PLAIN}"
@@ -48,17 +51,29 @@ if [ $current_user != "root" ]; then # 判断当前用户是否为root
     echo -e "${BLUE}已检测到当前用户为${YELLOW}root${PLAIN}"
 fi
 
-echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V1.2${PLAIN}"
+echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V1.2.1${PLAIN}"
 echo -e "${BLUE}作者：${YELLOW}天神${PLAIN}"
 
-echo -e "${GREEN}开始检查${BLUE}docker${GREEN}环境...${PLAIN}"
+echo -e "${GREEN}正在检查${BLUE}Docker${GREEN}环境...${PLAIN}"
 if docker >/dev/null 2>&1; then
     echo -e "${BLUE}Docker${GREEN}已安装${PLAIN}"
 else
-    echo -e "${BLUE}Docker${RED}未安装，开始安装……${PLAIN}"
-    docker version > /dev/null || curl -fsSL get.docker.com | bash
-    systemctl enable docker && systemctl restart docker
-    echo -e "${BLUE}Docker${GREEN}安装完成${PLAIN}"
+  if [ $mac = true ]; then
+    echo -e "${RED}Docker未安装${PLAIN}"
+    echo -e "${YELLOW}请先安装Docker Desktop并启动Docker Desktop服务！${PLAIN}"
+    exit 1
+  else
+    read -p "Docker未安装，是否要安装？(y/N):" install
+    if [ "$install" != "y" ] ;then
+      echo -e "${RED}已取消安装${PLAIN}"
+      exit 1
+    else
+      echo -e "${BLUE}开始安装...${PLAIN}"
+      docker version > /dev/null || curl -fsSL get.docker.com | bash
+      systemctl enable docker && systemctl restart docker
+      echo -e "${BLUE}Docker${GREEN}安装完成${PLAIN}"
+    fi
+  fi
 fi
 
 hub() {
@@ -151,30 +166,37 @@ echo -e "请确保您Hub的容器名是${YELLOW}wd-hub${BLUE}/Node的容器名�
 echo -e "否则本脚本可能无法正确删除容器，可能导致出现异常！${PLAIN}"
 read -p "请输入数字：" mode
 if [ $mode == "1" ]; then
+  clear
   hub
   exit 0
 elif [ $mode == "2" ]; then
+  clear
   node
   exit 0
 elif [ $mode == "3" ]; then
+  clear
   echo -e "${RED}删除当前容器...${PLAIN}"
   docker stop wd-hub && docker rm wd-hub
   hub
   exit 0
 elif [ $mode == "4" ]; then
+  clear
   echo -e "${RED}删除当前容器...${PLAIN}"
   docker stop wd && docker rm wd
   node
   exit 0
 elif [ $mode == "5" ]; then
+  clear
   echo -e "${RED}删除当前容器...${PLAIN}"
   docker stop wd-hub && docker rm wd-hub
   exit 0
 elif [ $mode == "6" ]; then
+  clear
   echo -e "${RED}删除当前容器...${PLAIN}"
   docker stop wd && docker rm wd
   exit 0
 elif [ $mode == "0" ]; then
+  clear
   echo -e "${BLUE}退出脚本${PLAIN}"
   exit 0
 else
