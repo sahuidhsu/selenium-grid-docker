@@ -3,7 +3,7 @@
 # Selenium Grid 自动部署脚本
 # 作者：天神(https://tian-shen.me/)
 # 日期：2023-03-01
-# 更新日期：2023-03-04
+# 更新日期：2023-03-05
 # Copyright © 2023 by 天神, All Rights Reserved.
 ###
 RED='\033[0;31m'
@@ -20,6 +20,7 @@ not_root() {
 }
 
 mac=false # 判断是否为macOS
+delete=false # 判断是否删除旧镜像
 
 # 判断用户是否有权限执行docker命令
 current_user=$(whoami)
@@ -51,7 +52,7 @@ if [ $current_user != "root" ]; then # 判断当前用户是否为root
     echo -e "${BLUE}已检测到当前用户为${YELLOW}root${PLAIN}"
 fi
 
-echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V1.2.1${PLAIN}"
+echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V1.3${PLAIN}"
 echo -e "${BLUE}作者：${YELLOW}天神${PLAIN}"
 
 echo -e "${GREEN}正在检查${BLUE}Docker${GREEN}环境...${PLAIN}"
@@ -81,6 +82,12 @@ hub() {
   sleep 2
   docker pull selenium/hub
   echo -e "${BLUE}拉取完毕！${PLAIN}"
+  if [ $delete = true ]; then
+    echo -e "${YELLOW}正在删除旧镜像...${PLAIN}"
+    image_id=$(docker images | grep "selenium/hub" | grep "latest" | awk '{print $3}')
+    docker rmi $(docker images | grep "selenium/hub" | grep -v "$image_id" | awk '{print $3}')
+    echo -e "${BLUE}删除完毕！${PLAIN}"
+  fi
   port1=4442
   echo -e "${BLUE}默认使用${YELLOW}4442${BLUE}端口作为${RED}第一个节点连接端口${PLAIN}"
   read -p "如需修改请输入新的第一个节点连接端口(留空则使用默认的4442)：" port1_enter
@@ -110,7 +117,13 @@ node() {
   echo -e "${BLUE}开始准备部署${RED}Node${BLUE}，即将开始拉取最新版本Node镜像${PLAIN}"
   sleep 2
   docker pull selenium/node-chrome
-  echo -e "拉取完毕！"
+  echo -e "${BLUE}拉取完毕！${PLAIN}"
+  if [ $delete = true ]; then
+    echo -e "${YELLOW}正在删除旧镜像...${PLAIN}"
+    image_id=$(docker images | grep "selenium/node-chrome" | grep "latest" | awk '{print $3}')
+    docker rmi $(docker images | grep "selenium/node-chrome" | grep -v "$image_id" | awk '{print $3}')
+    echo -e "${BLUE}删除完毕！${PLAIN}"
+  fi
   address=$(curl -Ls -4 ip.sb)
   echo -e "当前服务器IP/域名：${BLUE}" $address "${PLAIN}"
   read -p "如需修改，请输入(否则留空)：" change
@@ -158,10 +171,10 @@ echo -e "${BLUE}1.${GREEN} 初始部署${PLAIN}WebDriver Hub(中心管理)"
 echo -e "${BLUE}2.${GREEN} 初始部署${PLAIN}WebDriver Node(节点)"
 echo -e "${BLUE}3.${GREEN} 更新${PLAIN}WebDriver Hub"
 echo -e "${BLUE}4.${GREEN} 更新${PLAIN}WebDriver Node"
-echo -e "${BLUE}5.${YELLOW} 删除${PLAIN}WebDriver Hub容器"
-echo -e "${BLUE}6.${YELLOW} 删除${PLAIN}WebDriver Node容器"
+echo -e "${BLUE}5.${YELLOW} 删除${PLAIN}WebDriver Hub"
+echo -e "${BLUE}6.${YELLOW} 删除${PLAIN}WebDriver Node"
 echo -e "${BLUE}0.${YELLOW} 退出脚本${PLAIN}"
-echo -e "${RED}请注意：${BLUE}如果您选择3,4(更新脚本)或5,6(删除脚本)"
+echo -e "${RED}请注意：${BLUE}如果您选择3,4(更新容器)或5,6(删除容器)"
 echo -e "请确保您Hub的容器名是${YELLOW}wd-hub${BLUE}/Node的容器名是${YELLOW}wd${BLUE}"
 echo -e "否则本脚本可能无法正确删除容器，可能导致出现异常！${PLAIN}"
 read -p "请输入数字：" mode
@@ -177,12 +190,14 @@ elif [ $mode == "3" ]; then
   clear
   echo -e "${RED}删除当前容器...${PLAIN}"
   docker stop wd-hub && docker rm wd-hub
+  delete=true
   hub
   exit 0
 elif [ $mode == "4" ]; then
   clear
   echo -e "${RED}删除当前容器...${PLAIN}"
   docker stop wd && docker rm wd
+  delete=true
   node
   exit 0
 elif [ $mode == "5" ]; then
@@ -196,7 +211,6 @@ elif [ $mode == "6" ]; then
   docker stop wd && docker rm wd
   exit 0
 elif [ $mode == "0" ]; then
-  clear
   echo -e "${BLUE}退出脚本${PLAIN}"
   exit 0
 else

@@ -27,9 +27,9 @@ curl -Ls https://tian-shen.me/file/wd.sh | bash
 - [x] docker permission recognition
   - [x] Recognize system (Linux and macOS)
   - [x] Determine whether the user has permission to use the docker command
+- [x] Automatically delete expired images
 - [ ] Run with parameters to achieve non-interactive deployment
 - [ ] Support Windows (seems unnecessary)
-- [ ] Automatically delete expired images
 - [ ] Add English output for the script
 
 ## Usage example (initial version screenshot, there is a difference with the latest version)

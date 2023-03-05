@@ -27,9 +27,9 @@ curl -Ls https://tian-shen.me/file/wd.sh | bash
 - [x] docker权限识别
   - [x] 识别系统(Linux和macOS)
   - [x] 判断用户是否有使用docker指令的权限
+- [x] 自动删除过期的镜像
 - [ ] 运行时添加参数实现免交互式部署
 - [ ] 支持Windows(好像没啥必要)
-- [ ] 自动删除过期的镜像
 - [ ] 脚本添加英文输出
 
 ## 使用样例(初版截图，跟最新版有所出入)
