@@ -19,87 +19,6 @@ not_root() {
   sleep 1
 }
 
-mac=false # 判断是否为macOS
-delete=false # 判断是否删除旧镜像
-docker_hub="selenium/hub" # 默认x86 Hub镜像
-docker_node="selenium/node-chrome" # 默认x86 Node镜像
-
-# 判断系统架构
-arch=$(uname -m)
-if [ $arch == "x86_64" ]; then
-  echo -e "${BLUE}已检测到系统架构为${YELLOW}x86_64${PLAIN}"
-  echo -e "Hub镜像：${YELLOW}$docker_hub${PLAIN} | Node镜像：${YELLOW}$docker_node${PLAIN}"
-  elif [ $arch == "aarch64" ]; then
-    docker_hub="seleniarm/hub" # arm64 Hub镜像
-    docker_node="seleniarm/node-chromium" # arm64 Node镜像
-    echo -e "${BLUE}已检测到系统架构为${YELLOW}arm64 ${BLUE}已自动切换到arm镜像${PLAIN}"
-    echo -e "Hub镜像：${YELLOW}$docker_hub${PLAIN} | Node镜像：${YELLOW}$docker_node${PLAIN}"
-  elif [ $arch == "armv7l" ]; then
-    docker_hub="seleniarm/hub" # arm32 Hub镜像
-    docker_node="seleniarm/node-chromium" # arm32 Node镜像
-    echo -e "${BLUE}已检测到系统架构为${YELLOW}arm32 ${BLUE}已自动切换到arm镜像${PLAIN}"
-    echo -e "Hub镜像：${YELLOW}$docker_hub${PLAIN} | Node镜像：${YELLOW}$docker_node${PLAIN}"
-  else
-    echo -e "${BLUE}已检测到系统架构为${YELLOW}$arch${PLAIN}"
-    echo -e "${RED}脚本不支持当前系统架构！退出脚本${PLAIN}"
-    exit 1
-fi
-
-# 判断用户是否有权限执行docker命令
-current_user=$(whoami)
-if [ $current_user != "root" ]; then # 判断当前用户是否为root
-  if [[ $(uname) == "Darwin" ]]; then # 判断当前用户是否为macOS
-    echo -e "${BLUE}已检测到系统为${YELLOW}macOS${PLAIN}"
-    mac=true
-    if [ "$(docker info > /dev/null 2>&1; echo $?)" != "0" ]; then
-      echo -e "${RED}当前无法连接到Docker进程${PLAIN}"
-      echo -e "${YELLOW}请检查是否已安装Docker Desktop以及Docker Desktop服务是否已启动！${PLAIN}"
-      echo -e "${RED}如果您确信Docker Desktop已在运行，请尝试使用root(sudo)运行此脚本！${PLAIN}"
-      exit 1
-    else
-      not_root
-    fi
-  else
-    echo -e "${BLUE}已检测到系统为${YELLOW}Linux${PLAIN}"
-    if test -z "$(groups $current_user | grep docker)"; then # 判断当前用户是否在docker用户组中(仅适用于Linux)
-      echo -e "${RED}当前用户非root且不在docker用户组中，没有使用docker的权限${PLAIN}"
-      echo -e "${YELLOW}解决方法：${PLAIN}"
-      echo -e "1.${BLUE}将当前用户加入docker用户组并重新进入终端${YELLOW}(sudo gpasswd -a 用户名 docker)${PLAIN}"
-      echo -e "2.${BLUE}直接使用root(sudo)运行此脚本！${PLAIN}"
-      exit 1
-    else
-      not_root
-    fi
-  fi
-  else
-    echo -e "${BLUE}已检测到当前用户为${YELLOW}root${PLAIN}"
-fi
-
-echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V1.4${PLAIN}"
-echo -e "${BLUE}作者：${YELLOW}天神${PLAIN}"
-
-echo -e "${GREEN}正在检查${BLUE}Docker${GREEN}环境...${PLAIN}"
-if docker >/dev/null 2>&1; then
-    echo -e "${BLUE}Docker${GREEN}已安装${PLAIN}"
-else
-  if [ $mac = true ]; then
-    echo -e "${RED}Docker未安装${PLAIN}"
-    echo -e "${YELLOW}请先安装Docker Desktop并启动Docker Desktop服务！${PLAIN}"
-    exit 1
-  else
-    read -p "Docker未安装，是否要安装？(y/N):" install
-    if [ "$install" != "y" ] ;then
-      echo -e "${RED}已取消安装${PLAIN}"
-      exit 1
-    else
-      echo -e "${BLUE}开始安装...${PLAIN}"
-      docker version > /dev/null || curl -fsSL get.docker.com | bash
-      systemctl enable docker && systemctl restart docker
-      echo -e "${BLUE}Docker${GREEN}安装完成${PLAIN}"
-    fi
-  fi
-fi
-
 hub() {
   echo -e "${BLUE}开始准备部署${RED}Hub${BLUE}，即将开始拉取最新版本Hub镜像${PLAIN}"
   sleep 2
@@ -188,6 +107,85 @@ node() {
   docker run -d --name=wd -p $node_port:$node_port -p 5919:5900 -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
   echo -e "${BLUE}Node部署完毕${PLAIN}"
 }
+
+mac=false # 判断是否为macOS
+delete=false # 判断是否删除旧镜像
+docker_hub="selenium/hub" # 默认x86 Hub镜像
+docker_node="selenium/node-chrome" # 默认x86 Node镜像
+
+# 判断系统架构
+arch=$(uname -m)
+if [ $arch == "x86_64" ]; then
+  echo -e "${BLUE}已检测到系统架构为${YELLOW}x86_64${PLAIN}"
+  elif [ $arch == "aarch64" ]; then
+    docker_hub="seleniarm/hub" # arm64 Hub镜像
+    docker_node="seleniarm/node-chromium" # arm64 Node镜像
+    echo -e "${BLUE}已检测到系统架构为${YELLOW}arm64 ${BLUE}已自动切换到arm镜像${PLAIN}"
+  elif [ $arch == "armv7l" ]; then
+    docker_hub="seleniarm/hub" # arm32 Hub镜像
+    docker_node="seleniarm/node-chromium" # arm32 Node镜像
+    echo -e "${BLUE}已检测到系统架构为${YELLOW}arm32 ${BLUE}已自动切换到arm镜像${PLAIN}"
+  else
+    echo -e "${BLUE}已检测到系统架构为${YELLOW}$arch${PLAIN}"
+    echo -e "${RED}脚本不支持当前系统架构！退出脚本${PLAIN}"
+    exit 1
+fi
+echo -e "Hub镜像：${YELLOW}$docker_hub${PLAIN} | Node镜像：${YELLOW}$docker_node${PLAIN}"
+
+# 判断用户是否有权限执行docker命令
+current_user=$(whoami)
+if [ $current_user != "root" ]; then # 判断当前用户是否为root
+  if [[ $(uname) == "Darwin" ]]; then # 判断当前用户是否为macOS
+    echo -e "${BLUE}已检测到系统为${YELLOW}macOS${PLAIN}"
+    mac=true
+    if [ "$(docker info > /dev/null 2>&1; echo $?)" != "0" ]; then
+      echo -e "${RED}当前无法连接到Docker进程${PLAIN}"
+      echo -e "${YELLOW}请检查是否已安装Docker Desktop以及Docker Desktop服务是否已启动！${PLAIN}"
+      echo -e "${RED}如果您确信Docker Desktop已在运行，请尝试使用root(sudo)运行此脚本！${PLAIN}"
+      exit 1
+    else
+      not_root
+    fi
+  else
+    echo -e "${BLUE}已检测到系统为${YELLOW}Linux${PLAIN}"
+    if test -z "$(groups $current_user | grep docker)"; then # 判断当前用户是否在docker用户组中(仅适用于Linux)
+      echo -e "${RED}当前用户非root且不在docker用户组中，没有使用docker的权限${PLAIN}"
+      echo -e "${YELLOW}解决方法：${PLAIN}"
+      echo -e "1.${BLUE}将当前用户加入docker用户组并重新进入终端${YELLOW}(sudo gpasswd -a 用户名 docker)${PLAIN}"
+      echo -e "2.${BLUE}直接使用root(sudo)运行此脚本！${PLAIN}"
+      exit 1
+    else
+      not_root
+    fi
+  fi
+  else
+    echo -e "${BLUE}已检测到当前用户为${YELLOW}root${PLAIN}"
+fi
+
+echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V1.4.1${PLAIN}"
+echo -e "${BLUE}作者：${YELLOW}天神${PLAIN}"
+
+echo -e "${GREEN}正在检查${BLUE}Docker${GREEN}环境...${PLAIN}"
+if docker >/dev/null 2>&1; then
+    echo -e "${BLUE}Docker${GREEN}已安装${PLAIN}"
+else
+  if [ $mac = true ]; then
+    echo -e "${RED}Docker未安装${PLAIN}"
+    echo -e "${YELLOW}请先安装Docker Desktop并启动Docker Desktop服务！${PLAIN}"
+    exit 1
+  else
+    read -p "Docker未安装，是否要安装？(y/N):" install
+    if [ "$install" != "y" ] ;then
+      echo -e "${RED}已取消安装${PLAIN}"
+      exit 1
+    else
+      echo -e "${BLUE}开始安装...${PLAIN}"
+      docker version > /dev/null || curl -fsSL get.docker.com | bash
+      systemctl enable docker && systemctl restart docker
+      echo -e "${BLUE}Docker${GREEN}安装完成${PLAIN}"
+    fi
+  fi
+fi
 
 echo -e "${GREEN}请选择模式：${PLAIN}"
 echo -e "${BLUE}1.${GREEN} 初始部署${PLAIN}WebDriver Hub(中心管理)"
