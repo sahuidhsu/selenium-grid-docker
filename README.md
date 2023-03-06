@@ -1,7 +1,9 @@
 # selenium-grid-docker
-一个方便快捷的Selenium WebDriver Docker部署脚本
+一个方便快捷的Selenium WebDriver Docker部署脚本 \
+当前支持的系统：**Linux**, **macOS** \
+当前支持的架构：**x86_64**, **arm64**, **arm32v7**
 
-[English Ver](README_EN.md)
+[English README](README_EN.md)
 
 ## 使用方法：
 ```shell
@@ -19,6 +21,7 @@ curl -Ls https://tian-shen.me/file/wd.sh | bash
 ## 功能列表 - To Do List
 - [x] 安装Docker
 - [x] 快速部署Selenium Grid Hub或Node
+- [x] 自动识别系统架构，使用对应镜像
 - [x] 快速更新Selenium Grid Hub或Node(前提是使用本脚本部署的)
 - [x] 快速卸载Selenium Grid Hub或Node(前提是使用本脚本部署的)
 - [x] 自动获取IP作为默认地址

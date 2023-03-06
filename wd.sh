@@ -3,7 +3,7 @@
 # Selenium Grid 自动部署脚本
 # 作者：天神(https://tian-shen.me/)
 # 日期：2023-03-01
-# 更新日期：2023-03-05
+# 更新日期：2023-03-06
 # Copyright © 2023 by 天神, All Rights Reserved.
 ###
 RED='\033[0;31m'
@@ -21,6 +21,29 @@ not_root() {
 
 mac=false # 判断是否为macOS
 delete=false # 判断是否删除旧镜像
+docker_hub="selenium/hub" # 默认x86 Hub镜像
+docker_node="selenium/node-chrome" # 默认x86 Node镜像
+
+# 判断系统架构
+arch=$(uname -m)
+if [ $arch == "x86_64" ]; then
+  echo -e "${BLUE}已检测到系统架构为${YELLOW}x86_64${PLAIN}"
+  echo -e "Hub镜像：${YELLOW}$docker_hub${PLAIN} | Node镜像：${YELLOW}$docker_node${PLAIN}"
+  elif [ $arch == "aarch64" ]; then
+    docker_hub="seleniarm/hub" # arm64 Hub镜像
+    docker_node="seleniarm/node-chromium" # arm64 Node镜像
+    echo -e "${BLUE}已检测到系统架构为${YELLOW}arm64 ${BLUE}已自动切换到arm镜像${PLAIN}"
+    echo -e "Hub镜像：${YELLOW}$docker_hub${PLAIN} | Node镜像：${YELLOW}$docker_node${PLAIN}"
+  elif [ $arch == "armv7l" ]; then
+    docker_hub="seleniarm/hub" # arm32 Hub镜像
+    docker_node="seleniarm/node-chromium" # arm32 Node镜像
+    echo -e "${BLUE}已检测到系统架构为${YELLOW}arm32 ${BLUE}已自动切换到arm镜像${PLAIN}"
+    echo -e "Hub镜像：${YELLOW}$docker_hub${PLAIN} | Node镜像：${YELLOW}$docker_node${PLAIN}"
+  else
+    echo -e "${BLUE}已检测到系统架构为${YELLOW}$arch${PLAIN}"
+    echo -e "${RED}脚本不支持当前系统架构！退出脚本${PLAIN}"
+    exit 1
+fi
 
 # 判断用户是否有权限执行docker命令
 current_user=$(whoami)
@@ -52,7 +75,7 @@ if [ $current_user != "root" ]; then # 判断当前用户是否为root
     echo -e "${BLUE}已检测到当前用户为${YELLOW}root${PLAIN}"
 fi
 
-echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V1.3${PLAIN}"
+echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V1.4${PLAIN}"
 echo -e "${BLUE}作者：${YELLOW}天神${PLAIN}"
 
 echo -e "${GREEN}正在检查${BLUE}Docker${GREEN}环境...${PLAIN}"
@@ -80,12 +103,12 @@ fi
 hub() {
   echo -e "${BLUE}开始准备部署${RED}Hub${BLUE}，即将开始拉取最新版本Hub镜像${PLAIN}"
   sleep 2
-  docker pull selenium/hub
+  docker pull $docker_hub
   echo -e "${BLUE}拉取完毕！${PLAIN}"
   if [ $delete = true ]; then
     echo -e "${YELLOW}正在删除旧镜像...${PLAIN}"
-    image_id=$(docker images | grep "selenium/hub" | grep "latest" | awk '{print $3}')
-    docker rmi $(docker images | grep "selenium/hub" | grep -v "$image_id" | awk '{print $3}')
+    image_id=$(docker images | grep "$docker_hub" | grep "latest" | awk '{print $3}')
+    docker rmi $(docker images | grep "$docker_hub" | grep -v "$image_id" | awk '{print $3}')
     echo -e "${BLUE}删除完毕！${PLAIN}"
   fi
   port1=4442
@@ -109,19 +132,19 @@ hub() {
     portUI=$portUI_enter
     echo -e "已修正${RED}WebUI端口${PLAIN}为：${BLUE}" $portUI "${PLAIN}"
   fi
-  docker run -d -p $port1:4442 -p $port2:4443 -p $portUI:4444 --name wd-hub --log-opt max-size=1m --log-opt max-file=1 --restart=always selenium/hub
+  docker run -d -p $port1:4442 -p $port2:4443 -p $portUI:4444 --name wd-hub --log-opt max-size=1m --log-opt max-file=1 --restart=always $docker_hub
   echo -e "${BLUE}Hub部署完毕${PLAIN}"
 }
 
 node() {
   echo -e "${BLUE}开始准备部署${RED}Node${BLUE}，即将开始拉取最新版本Node镜像${PLAIN}"
   sleep 2
-  docker pull selenium/node-chrome
+  docker pull $docker_node
   echo -e "${BLUE}拉取完毕！${PLAIN}"
   if [ $delete = true ]; then
     echo -e "${YELLOW}正在删除旧镜像...${PLAIN}"
-    image_id=$(docker images | grep "selenium/node-chrome" | grep "latest" | awk '{print $3}')
-    docker rmi $(docker images | grep "selenium/node-chrome" | grep -v "$image_id" | awk '{print $3}')
+    image_id=$(docker images | grep "$docker_node" | grep "latest" | awk '{print $3}')
+    docker rmi $(docker images | grep "$docker_node" | grep -v "$image_id" | awk '{print $3}')
     echo -e "${BLUE}删除完毕！${PLAIN}"
   fi
   address=$(curl -Ls -4 ip.sb)
@@ -162,7 +185,7 @@ node() {
   read -p "请输入分配的内存(e.g. 512m 或 2g)：" memory
   read -p "请输入最大进程数：" number
   echo -e "${BLUE}开始部署！${PLAIN}"
-  docker run -d --name=wd -p $node_port:$node_port -p 5919:5900 -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always selenium/node-chrome
+  docker run -d --name=wd -p $node_port:$node_port -p 5919:5900 -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
   echo -e "${BLUE}Node部署完毕${PLAIN}"
 }
 
@@ -201,12 +224,10 @@ elif [ $mode == "4" ]; then
   node
   exit 0
 elif [ $mode == "5" ]; then
-  clear
   echo -e "${RED}删除当前容器...${PLAIN}"
   docker stop wd-hub && docker rm wd-hub
   exit 0
 elif [ $mode == "6" ]; then
-  clear
   echo -e "${RED}删除当前容器...${PLAIN}"
   docker stop wd && docker rm wd
   exit 0

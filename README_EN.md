@@ -1,5 +1,7 @@
 # selenium-grid-docker
-A convenient and quick Selenium WebDriver Docker deployment script
+A convenient and quick Selenium WebDriver Docker deployment script \
+Currently supported systems: **Linux**, **macOS** \
+Currently supported architectures: **x86_64**, **arm64**, **arm32v7**
 
 [中文版](README.md)
 
@@ -19,6 +21,7 @@ curl -Ls https://tian-shen.me/file/wd.sh | bash
 ## To Do List
 - [x] Install Docker
 - [x] Quickly deploy Selenium Grid Hub or Node
+- [x] Automatically detect the system architecture and use the corresponding image
 - [x] Quickly update Selenium Grid Hub or Node (provided that it is deployed using this script)
 - [x] Quickly uninstall Selenium Grid Hub or Node (provided that it is deployed using this script)
 - [x] Automatically obtain IP as default address
