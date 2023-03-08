@@ -30,6 +30,8 @@ hub() {
     docker rmi $(docker images | grep "$docker_hub" | grep -v "$image_id" | awk '{print $3}')
     echo -e "${BLUE}删除完毕！${PLAIN}"
   fi
+  echo -e "${YELLOW}请注意：部署Hub需要使用两个端口以连接节点${PLAIN}"
+  echo -e "${YELLOW}如果修改接下来要求您填写的两个${RED}节点连接端口${BLUE}，部署node时也请填写相同端口！${PLAIN}"
   port1=4442
   echo -e "${BLUE}默认使用${YELLOW}4442${BLUE}端口作为${RED}第一个节点连接端口${PLAIN}"
   read -p "如需修改请输入新的第一个节点连接端口(留空则使用默认的4442)：" port1_enter
@@ -68,6 +70,7 @@ node() {
   fi
   address=$(curl -Ls -4 ip.sb)
   echo -e "当前服务器IP/域名：${BLUE}" $address "${PLAIN}"
+  echo -e "${RED}如果本机是动态IP，请填写解析到本机的域名${PLAIN}"
   read -p "如需修改，请输入(否则留空)：" change
   if [ "$change" ] ;then
     address=$change
@@ -81,15 +84,15 @@ node() {
     echo -e "已修正Hub地址为：${BLUE}" $hub_address "${PLAIN}"
   fi
   port1=4442
-  echo -e "${BLUE}默认使用${YELLOW}4442${BLUE}端口作为${RED}第一个节点连接端口${PLAIN}"
-  read -p "如您的Hub已修改请输入正确的端口(留空则使用默认的4442)：" port1_enter
+  echo -e "${BLUE}默认使用${YELLOW}4442${BLUE}端口作为${RED}Hub连接端口1(请确保和您Hub部署时填写的一致)${PLAIN}"
+  read -p "如您的Hub修改过请输入正确的端口(留空则使用默认的4442)：" port1_enter
   if [ "$port1_enter" ] ;then
     port1=$port1_enter
     echo -e "已修正${RED}连接端口1${PLAIN}为：${BLUE}" $port1 "${PLAIN}"
   fi
   port2=4443
-  echo -e "${BLUE}默认使用${YELLOW}4443${BLUE}端口作为${RED}第二个节点连接端口${PLAIN}"
-  read -p "如您的Hub已修改请输入正确的端口(留空则使用默认的4443)：" port2_enter
+  echo -e "${BLUE}默认使用${YELLOW}4443${BLUE}端口作为${RED}Hub连接端口2(请确保和您Hub部署时填写的一致)${PLAIN}"
+  read -p "如您的Hub修改过请输入正确的端口(留空则使用默认的4443)：" port2_enter
   if [ "$port2_enter" ] ;then
     port2=$port2_enter
     echo -e "已修正${RED}连接端口2${PLAIN}为：${BLUE}" $port2 "${PLAIN}"
@@ -103,8 +106,17 @@ node() {
   fi
   read -p "请输入分配的内存(e.g. 512m 或 2g)：" memory
   read -p "请输入最大进程数：" number
-  echo -e "${BLUE}开始部署！${PLAIN}"
-  docker run -d --name=wd -p $node_port:$node_port -p 5919:5900 -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
+  echo -e "${BLUE}是否需要打开VNC调试功能(${RED}会打开5900端口${BLUE})?${PLAIN}"
+  read -p "请输入选择，留空默认不开启(y/N)：" vnc
+  if [ "$vnc" = "y" ] ;then
+    echo -e "${YELLOW}打开VNC调试${PLAIN}"
+    echo -e "${BLUE}开始部署！${PLAIN}"
+    docker run -d --name=wd -p $node_port:$node_port -p 5900:5900 -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
+  else
+    echo -e "${YELLOW}关闭VNC调试${PLAIN}"
+    echo -e "${BLUE}开始部署！${PLAIN}"
+    docker run -d --name=wd -p $node_port:$node_port -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
+  fi
   echo -e "${BLUE}Node部署完毕${PLAIN}"
 }
 
@@ -162,7 +174,7 @@ if [ $current_user != "root" ]; then # 判断当前用户是否为root
     echo -e "${BLUE}已检测到当前用户为${YELLOW}root${PLAIN}"
 fi
 
-echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V1.4.1${PLAIN}"
+echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V1.4.2${PLAIN}"
 echo -e "${BLUE}作者：${YELLOW}天神${PLAIN}"
 
 echo -e "${GREEN}正在检查${BLUE}Docker${GREEN}环境...${PLAIN}"
