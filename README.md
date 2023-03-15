@@ -1,9 +1,19 @@
-# selenium-grid-docker
-一个方便快捷的Selenium WebDriver Docker部署脚本 \
-当前支持的系统：**Linux**, **macOS** \
-当前支持的架构：**x86_64**, **arm64**, **arm32v7**
-
-[English README](README_EN.md)
+<h1 align="center">Selenium Grid Docker</h1>
+<p align="center">
+    <a href="https://github.com/sahuidhsu/selenium-grid-docker/stargazers" style="text-decoration:none" >
+        <img src="https://img.shields.io/github/stars/sahuidhsu/selenium-grid-docker.svg" alt="GitHub stars"/>
+    </a>
+    <a href="https://github.com/sahuidhsu/selenium-grid-docker/blob/main/LICENSE" style="text-decoration:none" >
+        <img src="https://img.shields.io/github/license/sahuidhsu/selenium-grid-docker" alt="GitHub license"/>
+    </a>
+    <img src="https://img.shields.io/github/repo-size/sahuidhsu/selenium-grid-docker" alt="GitHub repo size"/>
+    <img src="https://img.shields.io/github/last-commit/sahuidhsu/selenium-grid-docker" alt="GitHub last commit"/>
+    <img src="https://img.shields.io/badge/version-1.4.3-blue" alt="current version"/>
+</p>
+<h3 align="center">中文文档 | <a href="README_EN.md">English</a> </h3>
+<h3 align="center">一个方便快捷的Selenium WebDriver Docker部署脚本 </h3>
+<h4 align="center">当前支持的系统：Linux, macOS </h4>
+<h4 align="center">当前支持的架构：x86_64, arm64, arm32v7 </h4>
 
 ## 使用方法：
 ```shell
@@ -25,6 +35,7 @@ curl -Ls https://tian-shen.me/file/wd.sh | bash
 - [x] 快速更新Selenium Grid Hub或Node(前提是使用本脚本部署的)
 - [x] 快速卸载Selenium Grid Hub或Node(前提是使用本脚本部署的)
 - [x] 自动获取IP作为默认地址
+- [x] 自动判断IP所在地，选择获取IP的API
 - [x] 自定义Publish和Subscribe端口
 - [x] 自定义Hub端口
 - [x] docker权限识别

@@ -68,7 +68,13 @@ node() {
     docker rmi $(docker images | grep "$docker_node" | grep -v "$image_id" | awk '{print $3}')
     echo -e "${BLUE}删除完毕！${PLAIN}"
   fi
-  address=$(curl -Ls -4 ip.sb)
+  if [[ $(curl -m 10 -Ls https://ipapi.co/json | grep 'China') != "" ]]; then
+    echo -e "${BLUE}根据ipapi.co提供的信息，当前IP可能${RED}在中国大陆${BLUE}，将采用${YELLOW}ipip${BLUE}提供的API获取IP...${PLAIN}"
+    address=$(curl -Ls -4 myip.ipip.net/s)
+  else
+    echo -e "${BLUE}根据ipapi.co提供的信息，当前IP可能${RED}不在中国大陆${BLUE}，将采用${YELLOW}ip.sb${BLUE}提供的API获取IP...${PLAIN}"
+    address=$(curl -Ls -4 ip.sb)
+  fi
   echo -e "当前服务器IP/域名：${BLUE}" $address "${PLAIN}"
   echo -e "${RED}如果本机是动态IP，请填写解析到本机的域名${PLAIN}"
   read -p "如需修改，请输入(否则留空)：" change
@@ -174,7 +180,7 @@ if [ $current_user != "root" ]; then # 判断当前用户是否为root
     echo -e "${BLUE}已检测到当前用户为${YELLOW}root${PLAIN}"
 fi
 
-echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V1.4.2${PLAIN}"
+echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V1.4.3${PLAIN}"
 echo -e "${BLUE}作者：${YELLOW}天神${PLAIN}"
 
 echo -e "${GREEN}正在检查${BLUE}Docker${GREEN}环境...${PLAIN}"
