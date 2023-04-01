@@ -46,6 +46,8 @@ curl -Ls https://tian-shen.me/file/wd_en.sh | bash
 - [ ] Run with parameters to achieve non-interactive deployment
 - [ ] Support Windows (seems unnecessary)
 
-## Usage example (initial version screenshot, there is a difference with the latest version)
-
+## Usage example (initial version screenshot only, may be different from the latest version)
 ![Usage example display image](wd-demo.png "Usage example")
+
+## Buy me a coffee
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/ltyckts)

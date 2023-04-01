@@ -49,3 +49,6 @@ curl -Ls https://tian-shen.me/file/wd.sh | bash
 ## 使用样例(初版截图，跟最新版有所出入)
 
 ![使用样例的展示图片](wd-demo.png "使用样例")
+
+## 给我买杯咖啡
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/ltyckts)
