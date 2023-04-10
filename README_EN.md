@@ -8,7 +8,7 @@
     </a>
     <img src="https://img.shields.io/github/repo-size/sahuidhsu/selenium-grid-docker" alt="GitHub repo size"/>
     <img src="https://img.shields.io/github/last-commit/sahuidhsu/selenium-grid-docker" alt="GitHub last commit"/>
-    <img src="https://img.shields.io/badge/version-1.4.4-blue" alt="current version"/>
+    <img src="https://img.shields.io/badge/version-1.5-blue" alt="current version"/>
 </p>
 <h3 align="center"><a href="README.md">中文文档</a> | English </h3>
 <h3 align="center">A convenient and quick Selenium WebDriver Docker deployment script </h3>
@@ -43,6 +43,7 @@ curl -Ls https://tian-shen.me/file/wd_en.sh | bash
   - [x] Determine whether the user has permission to use the docker command
 - [x] Automatically delete expired images
 - [x] Add English support
+- [x] Add preserve-arguments option to update(provided by WatchTower)
 - [ ] Run with parameters to achieve non-interactive deployment
 - [ ] Support Windows (seems unnecessary)
 

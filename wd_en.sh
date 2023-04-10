@@ -3,7 +3,7 @@
 # Selenium Grid Auto Deploy Script
 # Author: LTY_CK_TS(https://tian-shen.me/)
 # Date: 2023-03-01
-# Update Date：2023-03-28
+# Update Date：2023-04-10
 # Copyright © 2023 by 天神, All Rights Reserved.
 ###
 RED='\033[0;31m'
@@ -180,7 +180,7 @@ if [ $current_user != "root" ]; then # check if root
     echo -e "${BLUE}You are running the script by ${YELLOW}root${PLAIN}"
 fi
 
-echo -e "${BLUE}Welcome to ${PLAIN}Selenium Grid${BLUE} Auto Deploy ${YELLOW}V1.4.4${PLAIN}"
+echo -e "${BLUE}Welcome to ${PLAIN}Selenium Grid${BLUE} Auto Deploy ${YELLOW}V1.5${PLAIN}"
 echo -e "${BLUE}Author: ${YELLOW}LTY_CK_TS${PLAIN}"
 
 echo -e "${GREEN}Checking ${BLUE}Docker${GREEN} environment...${PLAIN}"
@@ -206,17 +206,20 @@ else
 fi
 
 echo -e "${GREEN}Choose an option:${PLAIN}"
-echo -e "${BLUE}1.${GREEN} Initial deploy${PLAIN} - WebDriver Hub(central management)"
-echo -e "${BLUE}2.${GREEN} Initial deploy${PLAIN} - WebDriver Node"
-echo -e "${BLUE}3.${GREEN} Update ${PLAIN}WebDriver Hub"
-echo -e "${BLUE}4.${GREEN} Update ${PLAIN}WebDriver Node"
+echo -e "${BLUE}1.${YELLOW} Initial deploy${PLAIN} - WebDriver Hub(central management)"
+echo -e "${BLUE}2.${YELLOW} Initial deploy${PLAIN} - WebDriver Node"
+echo -e "${BLUE}3.${YELLOW} Update ${PLAIN}WebDriver Hub and preserve data(using WatchTower image)"
+echo -e "${BLUE}4.${YELLOW} Update ${PLAIN}WebDriver Node and preserve data(using WatchTower image)"
 echo -e "${BLUE}5.${YELLOW} Delete ${PLAIN}WebDriver Hub"
 echo -e "${BLUE}6.${YELLOW} Delete ${PLAIN}WebDriver Node"
+echo -e "${BLUE}7.${YELLOW} Update ${PLAIN}WebDriver Hub without preserving data"
+echo -e "${BLUE}8.${YELLOW} Update ${PLAIN}WebDriver Node without preserving data"
 echo -e "${BLUE}0.${YELLOW} Exit${PLAIN}"
-echo -e "${RED}Caution: ${BLUE}if you choose 3 ~ 6, please make sure the containers are deployed by this script!${PLAIN}"
-echo -e "That is, hub container using name: ${YELLOW}wd-hub${BLUE} and node container using name: ${YELLOW}wd${BLUE}"
-echo -e "Otherwise the containers would not be deleted and causing unwanted errors!${PLAIN}"
-read -p "Enter your choice:" mode
+echo -e "${RED}Caution: ${BLUE}if you choose 3 ~ 8, please make sure the containers are deployed by this script!${PLAIN}"
+echo -e "That is, hub container using name: ${YELLOW}wd-hub${PLAIN} and node container using name: ${YELLOW}wd${PLAIN}"
+echo -e "Otherwise the containers would not be detected correctly and causing unwanted errors!${PLAIN}"
+echo -e "${YELLOW}You have to re-enter arguments when updating using(7)(8), while(3)(4)provides arguments preservation.${PLAIN}"
+read -p "Enter your choice: " mode
 if [ $mode == "1" ]; then
   clear
   hub
@@ -227,17 +230,23 @@ elif [ $mode == "2" ]; then
   exit 0
 elif [ $mode == "3" ]; then
   clear
-  echo -e "${RED}Deleting...${PLAIN}"
-  docker stop wd-hub && docker rm wd-hub
-  delete=true
-  hub
+  echo -e "${BLUE}Pulling ${YELLOW}WatchTower${BLUE} image...${PLAIN}"
+  docker pull containrrr/watchtower
+  echo -e "${BLUE}Updating ${YELLOW}WebDriver Hub${BLUE}...(may take a while, please wait)${PLAIN}"
+  docker run --rm -v /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower --run-once --cleanup wd-hub
+  echo -e "${YELLOW}WatchTower ${BLUE}completed, if the line below showing 'Up X seconds', then the update is successful!${PLAIN}"
+  docker ps --filter "name=wd-hub" --format "{{.Status}}"
+  echo -e "If it's not, your hub image may already be the latest one. If no line is presented, then your container is not named ${YELLOW}wd-hub${PLAIN}"
   exit 0
 elif [ $mode == "4" ]; then
   clear
-  echo -e "${RED}Deleting...${PLAIN}"
-  docker stop wd && docker rm wd
-  delete=true
-  node
+  echo -e "${BLUE}Pulling ${YELLOW}WatchTower${BLUE} image...${PLAIN}"
+  docker pull containrrr/watchtower
+  echo -e "${BLUE}Updating ${YELLOW}WebDriver Node${BLUE}...(may take a while, please wait)${PLAIN}"
+  docker run --rm -v /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower --run-once --cleanup wd
+  echo -e "${YELLOW}WatchTower ${BLUE}completed, if the line below showing 'Up X seconds', then the update is successful!${PLAIN}"
+  docker ps --filter "name=wd" --format "{{.Status}}"
+  echo -e "If it's not, your node image may already be the latest one. If no line is presented, then your container is not named ${YELLOW}wd${PLAIN}"
   exit 0
 elif [ $mode == "5" ]; then
   echo -e "${RED}Deleting...${PLAIN}"
@@ -246,6 +255,20 @@ elif [ $mode == "5" ]; then
 elif [ $mode == "6" ]; then
   echo -e "${RED}Deleting...${PLAIN}"
   docker stop wd && docker rm wd
+  exit 0
+elif [ $mode == "7" ]; then
+  clear
+  echo -e "${RED}Deleting...${PLAIN}"
+  docker stop wd-hub && docker rm wd-hub
+  delete=true
+  hub
+  exit 0
+elif [ $mode == "8" ]; then
+  clear
+  echo -e "${RED}Deleting...${PLAIN}"
+  docker stop wd && docker rm wd
+  delete=true
+  node
   exit 0
 elif [ $mode == "0" ]; then
   echo -e "${BLUE}Exited${PLAIN}"

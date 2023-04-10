@@ -8,7 +8,7 @@
     </a>
     <img src="https://img.shields.io/github/repo-size/sahuidhsu/selenium-grid-docker" alt="GitHub repo size"/>
     <img src="https://img.shields.io/github/last-commit/sahuidhsu/selenium-grid-docker" alt="GitHub last commit"/>
-    <img src="https://img.shields.io/badge/version-1.4.4-blue" alt="current version"/>
+    <img src="https://img.shields.io/badge/version-1.5-blue" alt="current version"/>
 </p>
 <h3 align="center">中文文档 | <a href="README_EN.md">English</a> </h3>
 <h3 align="center">一个方便快捷的Selenium WebDriver Docker部署脚本 </h3>
@@ -43,6 +43,7 @@ curl -Ls https://tian-shen.me/file/wd.sh | bash
   - [x] 判断用户是否有使用docker指令的权限
 - [x] 自动删除过期的镜像
 - [x] 脚本添加英文版
+- [x] 支持一键更新并保留配置（使用WatchTower实现）
 - [ ] 运行时添加参数实现免交互式部署
 - [ ] 支持Windows(好像没啥必要)
 

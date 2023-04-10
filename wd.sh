@@ -3,7 +3,7 @@
 # Selenium Grid 自动部署脚本
 # 作者：天神(https://tian-shen.me/)
 # 日期：2023-03-01
-# 更新日期：2023-03-28
+# 更新日期：2023-04-10
 # Copyright © 2023 by 天神, All Rights Reserved.
 ###
 RED='\033[0;31m'
@@ -180,7 +180,7 @@ if [ $current_user != "root" ]; then # 判断当前用户是否为root
     echo -e "${BLUE}已检测到当前用户为${YELLOW}root${PLAIN}"
 fi
 
-echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V1.4.4${PLAIN}"
+echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V1.5${PLAIN}"
 echo -e "${BLUE}作者：${YELLOW}天神${PLAIN}"
 
 echo -e "${GREEN}正在检查${BLUE}Docker${GREEN}环境...${PLAIN}"
@@ -206,16 +206,19 @@ else
 fi
 
 echo -e "${GREEN}请选择模式：${PLAIN}"
-echo -e "${BLUE}1.${GREEN} 初始部署${PLAIN}WebDriver Hub(中心管理)"
-echo -e "${BLUE}2.${GREEN} 初始部署${PLAIN}WebDriver Node(节点)"
-echo -e "${BLUE}3.${GREEN} 更新${PLAIN}WebDriver Hub"
-echo -e "${BLUE}4.${GREEN} 更新${PLAIN}WebDriver Node"
+echo -e "${BLUE}1.${YELLOW} 初始部署${PLAIN}WebDriver Hub(中心管理)"
+echo -e "${BLUE}2.${YELLOW} 初始部署${PLAIN}WebDriver Node(节点)"
+echo -e "${BLUE}3.${YELLOW} 一键更新${PLAIN}WebDriver Hub(使用WatchTower镜像实现)"
+echo -e "${BLUE}4.${YELLOW} 一键更新${PLAIN}WebDriver Node(使用WatchTower镜像实现)"
 echo -e "${BLUE}5.${YELLOW} 删除${PLAIN}WebDriver Hub"
 echo -e "${BLUE}6.${YELLOW} 删除${PLAIN}WebDriver Node"
+echo -e "${BLUE}7.${YELLOW} 更新${PLAIN}WebDriver Hub"
+echo -e "${BLUE}8.${YELLOW} 更新${PLAIN}WebDriver Node"
 echo -e "${BLUE}0.${YELLOW} 退出脚本${PLAIN}"
-echo -e "${RED}请注意：${BLUE}如果您选择3,4(更新容器)或5,6(删除容器)"
+echo -e "${RED}请注意：${BLUE}如果您选择3,4,7,8(更新容器)或5,6(删除容器)"
 echo -e "请确保您Hub的容器名是${YELLOW}wd-hub${BLUE}/Node的容器名是${YELLOW}wd${BLUE}"
-echo -e "否则本脚本可能无法正确删除容器，可能导致出现异常！${PLAIN}"
+echo -e "否则将无法正确识别容器，可能导致出现异常！${PLAIN}"
+echo -e "${YELLOW}(7)(8)更新脚本需要重新输入部署参数，而(3)(4)一键更新会自动继承当前容器的参数，无需重新输入${PLAIN}"
 read -p "请输入数字：" mode
 if [ $mode == "1" ]; then
   clear
@@ -227,17 +230,23 @@ elif [ $mode == "2" ]; then
   exit 0
 elif [ $mode == "3" ]; then
   clear
-  echo -e "${RED}删除当前容器...${PLAIN}"
-  docker stop wd-hub && docker rm wd-hub
-  delete=true
-  hub
+  echo -e "${BLUE}正在拉取${YELLOW}WatchTower${BLUE}镜像...${PLAIN}"
+  docker pull containrrr/watchtower
+  echo -e "${BLUE}正在更新${YELLOW}WebDriver Hub${BLUE}...(可能需要一点时间，请耐心等待)${PLAIN}"
+  docker run --rm -v /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower --run-once --cleanup wd-hub
+  echo -e "${YELLOW}WatchTower${BLUE}运行完毕，接下来将显示Hub容器运行状态，如果是几秒前则表示已更新至最新版本${PLAIN}"
+  docker ps --filter "name=wd-hub" --format "{{.Status}}"
+  echo -e "如果时间没有变化则有可能是您的镜像已经是最新版本，如果没有显示则表示您的容器名不是${YELLOW}wd-hub${PLAIN}"
   exit 0
 elif [ $mode == "4" ]; then
   clear
-  echo -e "${RED}删除当前容器...${PLAIN}"
-  docker stop wd && docker rm wd
-  delete=true
-  node
+  echo -e "${BLUE}正在拉取${YELLOW}WatchTower${BLUE}镜像...${PLAIN}"
+  docker pull containrrr/watchtower
+  echo -e "${BLUE}正在更新${YELLOW}WebDriver Node${BLUE}...(可能需要一点时间，请耐心等待)${PLAIN}"
+  docker run --rm -v /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower --run-once --cleanup wd
+  echo -e "${YELLOW}WatchTower${BLUE}运行完毕，接下来将显示Node容器运行状态，如果是几秒前则表示已更新至最新版本${PLAIN}"
+  docker ps --filter "name=wd" --format "{{.Status}}"
+  echo -e "如果时间没有变化则有可能是您的镜像已经是最新版本，如果没有显示则表示您的容器名不是${YELLOW}wd${PLAIN}"
   exit 0
 elif [ $mode == "5" ]; then
   echo -e "${RED}删除当前容器...${PLAIN}"
@@ -246,6 +255,20 @@ elif [ $mode == "5" ]; then
 elif [ $mode == "6" ]; then
   echo -e "${RED}删除当前容器...${PLAIN}"
   docker stop wd && docker rm wd
+  exit 0
+elif [ $mode == "7" ]; then
+  clear
+  echo -e "${RED}删除当前容器...${PLAIN}"
+  docker stop wd-hub && docker rm wd-hub
+  delete=true
+  hub
+  exit 0
+elif [ $mode == "8" ]; then
+  clear
+  echo -e "${RED}删除当前容器...${PLAIN}"
+  docker stop wd && docker rm wd
+  delete=true
+  node
   exit 0
 elif [ $mode == "0" ]; then
   echo -e "${BLUE}退出脚本${PLAIN}"
