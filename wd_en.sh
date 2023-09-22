@@ -3,7 +3,7 @@
 # Selenium Grid Auto Deploy Script
 # Author: LTY_CK_TS(https://tian-shen.me/)
 # Date: 2023-03-01
-# Update Date：2023-04-10
+# Update Date：2023-09-22
 # Copyright © 2023 by 天神, All Rights Reserved.
 ###
 RED='\033[0;31m'

@@ -3,7 +3,7 @@
 # Selenium Grid 自动部署脚本
 # 作者：天神(https://tian-shen.me/)
 # 日期：2023-03-01
-# 更新日期：2023-04-10
+# 更新日期：2023-09-22
 # Copyright © 2023 by 天神, All Rights Reserved.
 ###
 RED='\033[0;31m'
