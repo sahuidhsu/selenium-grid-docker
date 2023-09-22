@@ -116,7 +116,7 @@ node() {
   read -p "Enter your choice, leave blank for No(y/N)：" vnc
   if [ "$vnc" = "y" ] ;then
     echo -e "${YELLOW}VNC function turned on${PLAIN}"
-    read -p "Enter the password for VNC connection, leave blank for default password 'secret'" vncpwd
+    read -p "Enter the password for VNC connection(leave blank for default password 'secret'):" vncpwd
     if [ "$vncpwd" = "" ] ;then
       vncpwd="secret"
     fi
@@ -185,7 +185,7 @@ if [ $current_user != "root" ]; then # check if root
     echo -e "${BLUE}You are running the script by ${YELLOW}root${PLAIN}"
 fi
 
-echo -e "${BLUE}Welcome to ${PLAIN}Selenium Grid${BLUE} Auto Deploy ${YELLOW}V1.5${PLAIN}"
+echo -e "${BLUE}Welcome to ${PLAIN}Selenium Grid${BLUE} Auto Deploy ${YELLOW}V1.6${PLAIN}"
 echo -e "${BLUE}Author: ${YELLOW}LTY_CK_TS${PLAIN}"
 
 echo -e "${GREEN}Checking ${BLUE}Docker${GREEN} environment...${PLAIN}"

@@ -116,13 +116,13 @@ node() {
   read -p "请输入选择，留空默认不开启(y/N)：" vnc
   if [ "$vnc" = "y" ] ;then
     echo -e "${YELLOW}打开VNC调试${PLAIN}"
-    read -p "请设置VNC会话密码，留空则使用默认密码 'secret'" vncpwd
+    read -p "请设置VNC会话密码(留空则使用默认密码 'secret')：" vncpwd
     if [ "$vncpwd" = "" ] ;then
       vncpwd="secret"
     fi
     echo -e "已设置VNC会话密码：${BLUE}" $vncpwd "${PLAIN}"
     echo -e "${BLUE}开始部署！${PLAIN}"
-    docker run -d --name=wd -p $node_port:$node_port -p 5900:5900 -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 -e SE_VNC_PASSWORD=$vncpwd --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
+    docker run -d --name=wd -p $node_port:$node_port -p 5900:5900 -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 -e SE_VNC_PASSWORD="$vncpwd" --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
   else
     echo -e "${YELLOW}关闭VNC调试${PLAIN}"
     echo -e "${BLUE}开始部署！${PLAIN}"
@@ -185,7 +185,7 @@ if [ $current_user != "root" ]; then # 判断当前用户是否为root
     echo -e "${BLUE}已检测到当前用户为${YELLOW}root${PLAIN}"
 fi
 
-echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V1.5${PLAIN}"
+echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V1.6${PLAIN}"
 echo -e "${BLUE}作者：${YELLOW}天神${PLAIN}"
 
 echo -e "${GREEN}正在检查${BLUE}Docker${GREEN}环境...${PLAIN}"
