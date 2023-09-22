@@ -116,12 +116,17 @@ node() {
   read -p "Enter your choice, leave blank for No(y/N)：" vnc
   if [ "$vnc" = "y" ] ;then
     echo -e "${YELLOW}VNC function turned on${PLAIN}"
+    read -p "Enter the password for VNC connection, leave blank for default password 'secret'" vncpwd
+    if [ "$vncpwd" = "" ] ;then
+      vncpwd="secret"
+    fi
+    echo -e "Set VNC password to ${BLUE}" $vncpwd "${PLAIN}"
     echo -e "${BLUE}Start deploying!${PLAIN}"
-    docker run -d --name=wd -p $node_port:$node_port -p 5900:5900 -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
+    docker run -d --name=wd -p $node_port:$node_port -p 5900:5900 -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 -e SE_VNC_PASSWORD=$vncpwd --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
   else
     echo -e "${YELLOW}VNC function turned off${PLAIN}"
     echo -e "${BLUE}Start deploying!${PLAIN}"
-    docker run -d --name=wd -p $node_port:$node_port -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
+    docker run -d --name=wd -p $node_port:$node_port -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_START_VNC=false --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
   fi
   echo -e "${BLUE}Deploy complete!${PLAIN}"
 }

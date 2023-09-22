@@ -116,12 +116,17 @@ node() {
   read -p "请输入选择，留空默认不开启(y/N)：" vnc
   if [ "$vnc" = "y" ] ;then
     echo -e "${YELLOW}打开VNC调试${PLAIN}"
+    read -p "请设置VNC会话密码，留空则使用默认密码 'secret'" vncpwd
+    if [ "$vncpwd" = "" ] ;then
+      vncpwd="secret"
+    fi
+    echo -e "已设置VNC会话密码：${BLUE}" $vncpwd "${PLAIN}"
     echo -e "${BLUE}开始部署！${PLAIN}"
-    docker run -d --name=wd -p $node_port:$node_port -p 5900:5900 -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
+    docker run -d --name=wd -p $node_port:$node_port -p 5900:5900 -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 -e SE_VNC_PASSWORD=$vncpwd --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
   else
     echo -e "${YELLOW}关闭VNC调试${PLAIN}"
     echo -e "${BLUE}开始部署！${PLAIN}"
-    docker run -d --name=wd -p $node_port:$node_port -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
+    docker run -d --name=wd -p $node_port:$node_port -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_START_VNC=false --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
   fi
   echo -e "${BLUE}Node部署完毕${PLAIN}"
 }
