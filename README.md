@@ -8,7 +8,7 @@
     </a>
     <img src="https://img.shields.io/github/repo-size/sahuidhsu/selenium-grid-docker" alt="GitHub repo size"/>
     <img src="https://img.shields.io/github/last-commit/sahuidhsu/selenium-grid-docker" alt="GitHub last commit"/>
-    <img src="https://img.shields.io/badge/version-1.6-blue" alt="current version"/>
+    <img src="https://img.shields.io/badge/version-1.7-blue" alt="current version"/>
 </p>
 <h3 align="center">中文文档 | <a href="README_EN.md">English</a> </h3>
 <h3 align="center">一个方便快捷的Selenium WebDriver Docker部署脚本 </h3>
@@ -17,15 +17,15 @@
 
 ## 使用方法：
 ```shell
-bash <(curl -Ls https://tian-shen.me/file/wd.sh)
+bash <(curl -Ls https://tian-shen.me/wd)
 ```
 或
 ```shell
 bash <(curl -Ls https://raw.githubusercontent.com/sahuidhsu/selenium-grid-docker/main/wd.sh)
 ```
-如以上语法无法使用，请尝试使用以下方法：
+如您的系统不支持以上语法，请尝试使用以下方法：
 ```shell
-curl -Ls https://tian-shen.me/file/wd.sh | bash
+curl -Ls -o wd https://tian-shen.me/wd && chmod +x wd && ./wd
 ```
 
 ## 功能列表 - To Do List

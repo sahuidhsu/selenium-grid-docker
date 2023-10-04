@@ -2,8 +2,8 @@
 ###
 # Selenium Grid Auto Deploy Script
 # Author: LTY_CK_TS(https://tian-shen.me/)
-# Date: 2023-03-01
-# Update Date：2023-09-22
+# Date: 01/03/2023
+# Update Date：04/10/2023
 # Copyright © 2023 by 天神, All Rights Reserved.
 ###
 RED='\033[0;31m'
@@ -185,7 +185,9 @@ if [ $current_user != "root" ]; then # check if root
     echo -e "${BLUE}You are running the script by ${YELLOW}root${PLAIN}"
 fi
 
-echo -e "${BLUE}Welcome to ${PLAIN}Selenium Grid${BLUE} Auto Deploy ${YELLOW}V1.6${PLAIN}"
+echo -e "${BLUE}Welcome to ${PLAIN}Selenium Grid${BLUE} Auto Deploy ${YELLOW}V1.7${PLAIN}"
+count=$(curl -Ls https://tian-shen.me/wd/count)
+echo -e "${YELLOW}This script has been run ${PLAIN}$count${YELLOW} times ${PLAIN}"
 echo -e "${BLUE}Author: ${YELLOW}LTY_CK_TS${PLAIN}"
 
 echo -e "${GREEN}Checking ${BLUE}Docker${GREEN} environment...${PLAIN}"
