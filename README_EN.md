@@ -44,10 +44,10 @@ curl -Ls -o wd_en https://tian-shen.me/wd_en && chmod +x wd_en && ./wd_en
 - [x] Automatically delete expired images
 - [x] Add English support
 - [x] Add preserve-arguments option to update(provided by WatchTower)
-- [ ] Run with parameters to achieve non-interactive deployment
+- [ ] Run with parameters to achieve non-interactive deployment(done in Chinese 2.0 version, English version will be updated soon)
 - [ ] Support Windows (seems unnecessary)
 
-## Usage example (initial version screenshot only, may be different from the latest version)
+## Usage example (Currently showing a newer version in Chinese, English version will be updated soon)
 ![Usage example display image](wd-demo.png "Usage example")
 
 ## Buy me a coffee

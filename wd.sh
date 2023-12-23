@@ -3,7 +3,7 @@
 # Selenium Grid 自动部署脚本
 # 作者：天神(https://tian-shen.me/)
 # 日期：2023-03-01
-# 更新日期：2023-10-04
+# 更新日期：2023-12-23
 # Copyright © 2023 by 天神, All Rights Reserved.
 ###
 RED='\033[0;31m'
@@ -30,28 +30,55 @@ hub() {
     docker rmi $(docker images | grep "$docker_hub" | grep -v "$image_id" | awk '{print $3}')
     echo -e "${BLUE}删除完毕！${PLAIN}"
   fi
-  echo -e "${YELLOW}请注意：部署Hub需要使用两个端口以连接节点${PLAIN}"
-  echo -e "${YELLOW}如果修改接下来要求您填写的两个${RED}节点连接端口${BLUE}，部署node时也请填写相同端口！${PLAIN}"
+  echo -e "${YELLOW}请注意：部署Hub需要使用两个端口来连接节点以及一个端口来部署WebUI${PLAIN}"
+  echo -e "${YELLOW}如果修改您填写的两个${RED}节点连接端口${BLUE}，部署node时也请填写相同端口！${PLAIN}"
   port1=4442
-  echo -e "${BLUE}默认使用${YELLOW}4442${BLUE}端口作为${RED}第一个节点连接端口${PLAIN}"
-  read -p "如需修改请输入新的第一个节点连接端口(留空则使用默认的4442)：" port1_enter
-  if [ "$port1_enter" ] ;then
-    port1=$port1_enter
-    echo -e "已修正${RED}连接端口1${PLAIN}为：${BLUE}" $port1 "${PLAIN}"
+  if [ $# -gt 0 ] ;then
+    if [ $# -gt 2 ] ;then
+      port1=$3
+      echo -e "${BLUE}已修正${RED}连接端口1${PLAIN}为：${BLUE}" $port1 "${PLAIN}"
+    else
+      echo -e "${BLUE}使用默认端口${YELLOW}4442${BLUE}作为${RED}第一个节点连接端口${PLAIN}"
+    fi
+  else
+    echo -e "${BLUE}默认使用${YELLOW}4442${BLUE}端口作为${RED}第一个节点连接端口${PLAIN}"
+    read -p "如需修改请输入新的第一个节点连接端口(留空则使用默认的4442)：" port1_enter
+    if [ "$port1_enter" ] ;then
+      port1=$port1_enter
+      echo -e "已修正${RED}连接端口1${PLAIN}为：${BLUE}" $port1 "${PLAIN}"
+    fi
   fi
   port2=4443
-  echo -e "${BLUE}默认使用${YELLOW}4443${BLUE}端口作为${RED}第二个节点连接端口${PLAIN}"
-  read -p "如需修改请输入新的第二个节点连接端口(留空则使用默认的4443)：" port2_enter
-  if [ "$port2_enter" ] ;then
-    port2=$port2_enter
-    echo -e "已修正${RED}连接端口2${PLAIN}为：${BLUE}" $port2 "${PLAIN}"
+  if [ $# -gt 0 ] ;then
+    if [ $# -gt 2 ] ;then
+      port2=$4
+      echo -e "${BLUE}已修正${RED}连接端口2${PLAIN}为：${BLUE}" $port2 "${PLAIN}"
+    else
+      echo -e "${BLUE}使用默认端口${YELLOW}4443${BLUE}作为${RED}第二个节点连接端口${PLAIN}"
+    fi
+  else
+    echo -e "${BLUE}默认使用${YELLOW}4443${BLUE}端口作为${RED}第二个节点连接端口${PLAIN}"
+    read -p "如需修改请输入新的第二个节点连接端口(留空则使用默认的4443)：" port2_enter
+    if [ "$port2_enter" ] ;then
+      port2=$port2_enter
+      echo -e "已修正${RED}连接端口2${PLAIN}为：${BLUE}" $port2 "${PLAIN}"
+    fi
   fi
   portUI=4444
-  echo -e "${BLUE}默认使用${YELLOW}4444${BLUE}端口作为${RED}WebUI端口${PLAIN}"
-  read -p "如需修改请输入新的WebUI端口(留空则使用默认的4444)：" portUI_enter
-  if [ "$portUI_enter" ] ;then
-    portUI=$portUI_enter
-    echo -e "已修正${RED}WebUI端口${PLAIN}为：${BLUE}" $portUI "${PLAIN}"
+  if [ $# -gt 0 ] ;then
+    if [ $# -gt 2 ] ;then
+      portUI=$5
+      echo -e "${BLUE}已修正${RED}WebUI端口${PLAIN}为：${BLUE}" $portUI "${PLAIN}"
+    else
+      echo -e "${BLUE}使用默认端口${YELLOW}4444${BLUE}作为${RED}WebUI端口${PLAIN}"
+    fi
+  else
+    echo -e "${BLUE}默认使用${YELLOW}4444${BLUE}端口作为${RED}WebUI端口${PLAIN}"
+    read -p "如需修改请输入新的WebUI端口(留空则使用默认的4444)：" portUI_enter
+    if [ "$portUI_enter" ] ;then
+      portUI=$portUI_enter
+      echo -e "已修正${RED}WebUI端口${PLAIN}为：${BLUE}" $portUI "${PLAIN}"
+    fi
   fi
   docker run -d -p $port1:4442 -p $port2:4443 -p $portUI:4444 --name wd-hub --log-opt max-size=1m --log-opt max-file=1 --restart=always $docker_hub
   echo -e "${BLUE}Hub部署完毕${PLAIN}"
@@ -76,57 +103,125 @@ node() {
     address=$(curl -Ls -4 ip.sb)
   fi
   echo -e "当前服务器IP/域名：${BLUE}" $address "${PLAIN}"
-  echo -e "${RED}如果本机是动态IP，请填写解析到本机的域名${PLAIN}"
-  read -p "如需修改，请输入(否则留空)：" change
-  if [ "$change" ] ;then
-    address=$change
-    echo -e "已修正IP/域名为：${BLUE}" $address "${PLAIN}"
-  fi
-  hub_address=$address
-  echo -e "默认使用当前服务器IP作为${RED}要连接的Hub${PLAIN}的地址"
-  read -p "请输入Hub的IP/域名(如果Hub就在本机则请留空)：" hub_add
-  if [ "$hub_add" ] ;then
-    hub_address=$hub_add
-    echo -e "已修正Hub地址为：${BLUE}" $hub_address "${PLAIN}"
-  fi
-  port1=4442
-  echo -e "${BLUE}默认使用${YELLOW}4442${BLUE}端口作为${RED}Hub连接端口1(请确保和您Hub部署时填写的一致)${PLAIN}"
-  read -p "如您的Hub修改过请输入正确的端口(留空则使用默认的4442)：" port1_enter
-  if [ "$port1_enter" ] ;then
-    port1=$port1_enter
-    echo -e "已修正${RED}连接端口1${PLAIN}为：${BLUE}" $port1 "${PLAIN}"
-  fi
-  port2=4443
-  echo -e "${BLUE}默认使用${YELLOW}4443${BLUE}端口作为${RED}Hub连接端口2(请确保和您Hub部署时填写的一致)${PLAIN}"
-  read -p "如您的Hub修改过请输入正确的端口(留空则使用默认的4443)：" port2_enter
-  if [ "$port2_enter" ] ;then
-    port2=$port2_enter
-    echo -e "已修正${RED}连接端口2${PLAIN}为：${BLUE}" $port2 "${PLAIN}"
-  fi
-  node_port=5556
-  echo -e "${BLUE}默认使用${YELLOW}5556${BLUE}端口作为${RED}当前节点的通讯端口${PLAIN}"
-  read -p "如需修改请输入新的通讯端口(留空则使用默认的5556)：" node_port_enter
-  if [ "$node_port_enter" ] ;then
-    node_port=$node_port_enter
-    echo -e "已修正${RED}当前节点通讯端口${PLAIN}为：${BLUE}" $node_port "${PLAIN}"
-  fi
-  read -p "请输入分配的内存(e.g. 512m 或 2g)：" memory
-  read -p "请输入最大进程数：" number
-  echo -e "${BLUE}是否需要打开VNC调试功能(${RED}会打开5900端口${BLUE})?${PLAIN}"
-  read -p "请输入选择，留空默认不开启(y/N)：" vnc
-  if [ "$vnc" = "y" ] ;then
-    echo -e "${YELLOW}打开VNC调试${PLAIN}"
-    read -p "请设置VNC会话密码(留空则使用默认密码 'secret')：" vncpwd
-    if [ "$vncpwd" = "" ] ;then
-      vncpwd="secret"
+  if [ $# -gt 0 ] ;then
+    if [ $# -gt 2 ] ;then
+      address=$3
+      echo -e "${BLUE}已修正IP/域名为：${BLUE}" $address "${PLAIN}"
+      hub_address=$4
+      echo -e "${BLUE}已修正Hub地址为：${BLUE}" $hub_address "${PLAIN}"
+      port1=$5
+      echo -e "${BLUE}已修正${RED}连接端口1${PLAIN}为：${BLUE}" $port1 "${PLAIN}"
+      port2=$6
+      echo -e "${BLUE}已修正${RED}连接端口2${PLAIN}为：${BLUE}" $port2 "${PLAIN}"
+      node_port=$7
+      echo -e "${BLUE}已修正${RED}当前节点通讯端口${PLAIN}为：${BLUE}" $node_port "${PLAIN}"
+      memory=$8
+      echo -e "${BLUE}已修正分配的内存为：${BLUE}" $memory "${PLAIN}"
+      number=$9
+      echo -e "${BLUE}已修正最大进程数为：${BLUE}" $number "${PLAIN}"
+      vnc=${10}
+      if [ "$vnc" = "y" ] ;then
+        vnc_pwd=${11}
+        echo -e "${BLUE}已修正VNC会话密码为：${BLUE}" $vnc_pwd "${PLAIN}"
+        echo -e "${BLUE}开始部署！${PLAIN}"
+        docker run -d --name=wd -p $node_port:$node_port -p 5900:5900 -e SE_NODE_HOST=$address \
+        -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 \
+        -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true \
+        -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 -e SE_VNC_PASSWORD="$vncpwd" --log-opt max-size=1m \
+        --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
+      else
+        echo -e "${YELLOW}关闭VNC调试${PLAIN}"
+        echo -e "${BLUE}开始部署！${PLAIN}"
+        docker run -d --name=wd -p $node_port:$node_port -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address \
+         -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port \
+         -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true \
+         -e SE_SESSION_RETRY_INTERVAL=1 -e SE_START_VNC=false --log-opt max-size=1m --log-opt max-file=1 \
+         --shm-size="$memory" --restart=always $docker_node
+      fi
+    else
+      echo -e "${BLUE}默认使用当前服务器IP作为${RED}要连接的Hub${PLAIN}的地址"
+      echo -e "${BLUE}如果本机是动态IP或获取到的IP不正确，请重新运行脚本，并在参数中填写解析到本机的域名${PLAIN}"
+      hub_address=$address
+      echo -e "默认使用当前服务器IP作为${RED}要连接的Hub${PLAIN}的地址"
+      port1=4442
+      echo -e "${BLUE}默认使用${YELLOW}4442${BLUE}端口作为${RED}Hub连接端口1(请确保和您Hub部署时填写的一致)${PLAIN}"
+      port2=4443
+      echo -e "${BLUE}默认使用${YELLOW}4443${BLUE}端口作为${RED}Hub连接端口2(请确保和您Hub部署时填写的一致)${PLAIN}"
+      node_port=5556
+      echo -e "${BLUE}默认使用${YELLOW}5556${BLUE}端口作为${RED}当前节点的通讯端口${PLAIN}"
+      memory=512m
+      echo -e "${BLUE}默认分配${YELLOW}512m${BLUE}内存给${RED}当前节点${PLAIN}"
+      number=5
+      echo -e "${BLUE}默认最大进程数为${YELLOW}5${PLAIN}"
+      echo -e "${BLUE}默认关闭vnc调试${PLAIN}"
+      echo -e "${BLUE}开始部署！${PLAIN}"
+      docker run -d --name=wd -p $node_port:$node_port -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address \
+       -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port \
+       -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true \
+       -e SE_SESSION_RETRY_INTERVAL=1 -e SE_START_VNC=false --log-opt max-size=1m --log-opt max-file=1 \
+       --shm-size="$memory" --restart=always $docker_node
     fi
-    echo -e "已设置VNC会话密码：${BLUE}" $vncpwd "${PLAIN}"
-    echo -e "${BLUE}开始部署！${PLAIN}"
-    docker run -d --name=wd -p $node_port:$node_port -p 5900:5900 -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 -e SE_VNC_PASSWORD="$vncpwd" --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
   else
-    echo -e "${YELLOW}关闭VNC调试${PLAIN}"
-    echo -e "${BLUE}开始部署！${PLAIN}"
-    docker run -d --name=wd -p $node_port:$node_port -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_START_VNC=false --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
+    echo -e "${RED}如果本机是动态IP，请填写解析到本机的域名${PLAIN}"
+    read -p "如需修改，请输入(否则留空)：" change
+    if [ "$change" ] ;then
+      address=$change
+      echo -e "已修正IP/域名为：${BLUE}" $address "${PLAIN}"
+    fi
+    hub_address=$address
+    echo -e "默认使用当前服务器IP作为${RED}要连接的Hub${PLAIN}的地址"
+    read -p "请输入Hub的IP/域名(如果Hub就在本机则请留空)：" hub_add
+    if [ "$hub_add" ] ;then
+      hub_address=$hub_add
+      echo -e "已修正Hub地址为：${BLUE}" $hub_address "${PLAIN}"
+    fi
+    port1=4442
+    echo -e "${BLUE}默认使用${YELLOW}4442${BLUE}端口作为${RED}Hub连接端口1(请确保和您Hub部署时填写的一致)${PLAIN}"
+    read -p "如您的Hub修改过请输入正确的端口(留空则使用默认的4442)：" port1_enter
+    if [ "$port1_enter" ] ;then
+      port1=$port1_enter
+      echo -e "已修正${RED}连接端口1${PLAIN}为：${BLUE}" $port1 "${PLAIN}"
+    fi
+    port2=4443
+    echo -e "${BLUE}默认使用${YELLOW}4443${BLUE}端口作为${RED}Hub连接端口2(请确保和您Hub部署时填写的一致)${PLAIN}"
+    read -p "如您的Hub修改过请输入正确的端口(留空则使用默认的4443)：" port2_enter
+    if [ "$port2_enter" ] ;then
+      port2=$port2_enter
+      echo -e "已修正${RED}连接端口2${PLAIN}为：${BLUE}" $port2 "${PLAIN}"
+    fi
+    node_port=5556
+    echo -e "${BLUE}默认使用${YELLOW}5556${BLUE}端口作为${RED}当前节点的通讯端口${PLAIN}"
+    read -p "如需修改请输入新的通讯端口(留空则使用默认的5556)：" node_port_enter
+    if [ "$node_port_enter" ] ;then
+      node_port=$node_port_enter
+      echo -e "已修正${RED}当前节点通讯端口${PLAIN}为：${BLUE}" $node_port "${PLAIN}"
+    fi
+    read -p "请输入分配的内存(e.g. 512m 或 2g)：" memory
+    read -p "请输入最大进程数：" number
+    echo -e "${BLUE}是否需要打开VNC调试功能(${RED}会打开5900端口${BLUE})?${PLAIN}"
+    read -p "请输入选择，留空默认不开启(y/N)：" vnc
+    if [ "$vnc" = "y" ] ;then
+      echo -e "${YELLOW}打开VNC调试${PLAIN}"
+      read -p "请设置VNC会话密码(留空则使用默认密码 'secret')：" vncpwd
+      if [ "$vncpwd" = "" ] ;then
+        vncpwd="secret"
+      fi
+      echo -e "已设置VNC会话密码：${BLUE}" $vncpwd "${PLAIN}"
+      echo -e "${BLUE}开始部署！${PLAIN}"
+      docker run -d --name=wd -p $node_port:$node_port -p 5900:5900 -e SE_NODE_HOST=$address \
+      -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 \
+      -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true \
+      -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 -e SE_VNC_PASSWORD="$vncpwd" --log-opt max-size=1m \
+      --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
+    else
+      echo -e "${YELLOW}关闭VNC调试${PLAIN}"
+      echo -e "${BLUE}开始部署！${PLAIN}"
+      docker run -d --name=wd -p $node_port:$node_port -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address \
+       -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port \
+       -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true \
+       -e SE_SESSION_RETRY_INTERVAL=1 -e SE_START_VNC=false --log-opt max-size=1m --log-opt max-file=1 \
+       --shm-size="$memory" --restart=always $docker_node
+    fi
   fi
   echo -e "${BLUE}Node部署完毕${PLAIN}"
 }
@@ -185,7 +280,7 @@ if [ $current_user != "root" ]; then # 判断当前用户是否为root
     echo -e "${BLUE}已检测到当前用户为${YELLOW}root${PLAIN}"
 fi
 
-echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V1.7${PLAIN}"
+echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V2.0${PLAIN}"
 count=$(curl -Ls https://tian-shen.me/wd/count)
 echo -e "${YELLOW}脚本已被运行${PLAIN}$count${YELLOW}次${PLAIN}"
 echo -e "${BLUE}作者：${YELLOW}天神${PLAIN}"
@@ -212,75 +307,154 @@ else
   fi
 fi
 
-echo -e "${GREEN}请选择模式：${PLAIN}"
-echo -e "${BLUE}1.${YELLOW} 初始部署${PLAIN}WebDriver Hub(中心管理)"
-echo -e "${BLUE}2.${YELLOW} 初始部署${PLAIN}WebDriver Node(节点)"
-echo -e "${BLUE}3.${YELLOW} 一键更新${PLAIN}WebDriver Hub(使用WatchTower镜像实现)"
-echo -e "${BLUE}4.${YELLOW} 一键更新${PLAIN}WebDriver Node(使用WatchTower镜像实现)"
-echo -e "${BLUE}5.${YELLOW} 删除${PLAIN}WebDriver Hub"
-echo -e "${BLUE}6.${YELLOW} 删除${PLAIN}WebDriver Node"
-echo -e "${BLUE}7.${YELLOW} 更新${PLAIN}WebDriver Hub"
-echo -e "${BLUE}8.${YELLOW} 更新${PLAIN}WebDriver Node"
-echo -e "${BLUE}0.${YELLOW} 退出脚本${PLAIN}"
-echo -e "${RED}请注意：${BLUE}如果您选择3,4,7,8(更新容器)或5,6(删除容器)"
-echo -e "请确保您Hub的容器名是${YELLOW}wd-hub${BLUE}/Node的容器名是${YELLOW}wd${BLUE}"
-echo -e "否则将无法正确识别容器，可能导致出现异常！${PLAIN}"
-echo -e "${YELLOW}(7)(8)更新脚本需要重新输入部署参数，而(3)(4)一键更新会自动继承当前容器的参数，无需重新输入${PLAIN}"
-read -p "请输入数字：" mode
-if [ $mode == "1" ]; then
-  clear
-  hub
-  exit 0
-elif [ $mode == "2" ]; then
-  clear
-  node
-  exit 0
-elif [ $mode == "3" ]; then
-  clear
-  echo -e "${BLUE}正在拉取${YELLOW}WatchTower${BLUE}镜像...${PLAIN}"
-  docker pull containrrr/watchtower
-  echo -e "${BLUE}正在更新${YELLOW}WebDriver Hub${BLUE}...(可能需要一点时间，请耐心等待)${PLAIN}"
-  docker run --rm -v /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower --run-once --cleanup wd-hub
-  echo -e "${YELLOW}WatchTower${BLUE}运行完毕，接下来将显示Hub容器运行状态，如果是几秒前则表示已更新至最新版本${PLAIN}"
-  docker ps --filter "name=wd-hub" --format "{{.Status}}"
-  echo -e "如果时间没有变化则有可能是您的镜像已经是最新版本，如果没有显示则表示您的容器名不是${YELLOW}wd-hub${PLAIN}"
-  exit 0
-elif [ $mode == "4" ]; then
-  clear
-  echo -e "${BLUE}正在拉取${YELLOW}WatchTower${BLUE}镜像...${PLAIN}"
-  docker pull containrrr/watchtower
-  echo -e "${BLUE}正在更新${YELLOW}WebDriver Node${BLUE}...(可能需要一点时间，请耐心等待)${PLAIN}"
-  docker run --rm -v /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower --run-once --cleanup wd
-  echo -e "${YELLOW}WatchTower${BLUE}运行完毕，接下来将显示Node容器运行状态，如果是几秒前则表示已更新至最新版本${PLAIN}"
-  docker ps --filter "name=wd" --format "{{.Status}}"
-  echo -e "如果时间没有变化则有可能是您的镜像已经是最新版本，如果没有显示则表示您的容器名不是${YELLOW}wd${PLAIN}"
-  exit 0
-elif [ $mode == "5" ]; then
-  echo -e "${RED}删除当前容器...${PLAIN}"
-  docker stop wd-hub && docker rm wd-hub
-  exit 0
-elif [ $mode == "6" ]; then
-  echo -e "${RED}删除当前容器...${PLAIN}"
-  docker stop wd && docker rm wd
-  exit 0
-elif [ $mode == "7" ]; then
-  clear
-  echo -e "${RED}删除当前容器...${PLAIN}"
-  docker stop wd-hub && docker rm wd-hub
-  delete=true
-  hub
-  exit 0
-elif [ $mode == "8" ]; then
-  clear
-  echo -e "${RED}删除当前容器...${PLAIN}"
-  docker stop wd && docker rm wd
-  delete=true
-  node
-  exit 0
-elif [ $mode == "0" ]; then
-  echo -e "${BLUE}退出脚本${PLAIN}"
-  exit 0
+show_menu() {
+  echo -e "${GREEN}请选择模式：${PLAIN}"
+  echo -e "${BLUE}1.${YELLOW} 初始部署${PLAIN}WebDriver Hub(中心管理)"
+  echo -e "${BLUE}2.${YELLOW} 初始部署${PLAIN}WebDriver Node(节点)"
+  echo -e "${BLUE}3.${YELLOW} 一键更新${PLAIN}WebDriver Hub(使用WatchTower镜像实现)"
+  echo -e "${BLUE}4.${YELLOW} 一键更新${PLAIN}WebDriver Node(使用WatchTower镜像实现)"
+  echo -e "${BLUE}5.${YELLOW} 删除${PLAIN}WebDriver Hub"
+  echo -e "${BLUE}6.${YELLOW} 删除${PLAIN}WebDriver Node"
+  echo -e "${BLUE}7.${YELLOW} 手动更新${PLAIN}WebDriver Hub"
+  echo -e "${BLUE}8.${YELLOW} 手动更新${PLAIN}WebDriver Node"
+  echo -e "${BLUE}0.${YELLOW} 退出脚本${PLAIN}"
+  echo -e "${RED}请注意：${BLUE}如果您选择3,4,7,8(更新容器)或5,6(删除容器)"
+  echo -e "请确保您Hub的容器名是${YELLOW}wd-hub${BLUE}/Node的容器名是${YELLOW}wd${BLUE}"
+  echo -e "否则将无法正确识别容器，可能导致出现异常！${PLAIN}"
+  echo -e "${YELLOW}(7)(8)更新脚本需要重新输入部署参数，而(3)(4)一键更新会自动继承当前容器的参数，无需重新输入${PLAIN}"
+  read -p "请输入数字：" mode
+  case $mode in
+  "1")
+    clear
+    hub
+    exit 0
+  ;;
+  "2")
+    clear
+    node
+    exit 0
+  ;;
+  "3")
+    clear
+    echo -e "${BLUE}正在拉取${YELLOW}WatchTower${BLUE}镜像...${PLAIN}"
+    docker pull containrrr/watchtower
+    echo -e "${BLUE}正在更新${YELLOW}WebDriver Hub${BLUE}...(可能需要一点时间，请耐心等待)${PLAIN}"
+    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower --run-once --cleanup wd-hub
+    echo -e "${YELLOW}WatchTower${BLUE}运行完毕，接下来将显示Hub容器运行状态，如果是几秒前则表示已更新至最新版本${PLAIN}"
+    docker ps --filter "name=wd-hub" --format "{{.Status}}"
+    echo -e "如果时间没有变化则有可能是您的镜像已经是最新版本，如果没有显示则表示您的容器名不是${YELLOW}wd-hub${PLAIN}"
+    exit 0
+  ;;
+  "4")
+    clear
+    echo -e "${BLUE}正在拉取${YELLOW}WatchTower${BLUE}镜像...${PLAIN}"
+    docker pull containrrr/watchtower
+    echo -e "${BLUE}正在更新${YELLOW}WebDriver Node${BLUE}...(可能需要一点时间，请耐心等待)${PLAIN}"
+    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower --run-once --cleanup wd
+    echo -e "${YELLOW}WatchTower${BLUE}运行完毕，接下来将显示Node容器运行状态，如果是几秒前则表示已更新至最新版本${PLAIN}"
+    docker ps --filter "name=wd" --format "{{.Status}}"
+    echo -e "如果时间没有变化则有可能是您的镜像已经是最新版本，如果没有显示则表示您的容器名不是${YELLOW}wd${PLAIN}"
+    exit 0
+  ;;
+  "5")
+    echo -e "${RED}删除当前容器...${PLAIN}"
+    docker stop wd-hub && docker rm wd-hub
+    exit 0
+  ;;
+  "6")
+    echo -e "${RED}删除当前容器...${PLAIN}"
+    docker stop wd && docker rm wd
+    exit 0
+  ;;
+  "7")
+    clear
+    echo -e "${RED}删除当前容器...${PLAIN}"
+    docker stop wd-hub && docker rm wd-hub
+    delete=true
+    hub
+    exit 0
+  ;;
+  "8")
+    clear
+    echo -e "${RED}删除当前容器...${PLAIN}"
+    docker stop wd && docker rm wd
+    delete=true
+    node
+    exit 0
+  ;;
+  "0")
+    echo -e "${BLUE}退出脚本${PLAIN}"
+    exit 0
+  ;;
+  *)
+    echo -e "${RED}输入错误，请重新运行脚本${PLAIN}"
+    exit 1
+  ;;
+  esac
+}
+
+
+if [ $# = 0 ] ;then
+  show_menu
 else
-  echo -e "${RED}输入错误，请重新运行脚本${PLAIN}"
-  exit 1
+  case $1 in
+  "hub")
+    case $2 in
+    "update")
+      echo -e "${BLUE}正在拉取${YELLOW}WatchTower${BLUE}镜像...${PLAIN}"
+      docker pull containrrr/watchtower
+      echo -e "${BLUE}正在更新${YELLOW}WebDriver Hub${BLUE}...(可能需要一点时间，请耐心等待)${PLAIN}"
+      docker run --rm -v /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower --run-once --cleanup wd-hub
+      echo -e "${YELLOW}WatchTower${BLUE}运行完毕，接下来将显示Hub容器运行状态，如果是几秒前则表示已更新至最新版本${PLAIN}"
+      docker ps --filter "name=wd-hub" --format "{{.Status}}"
+      echo -e "如果时间没有变化则有可能是您的镜像已经是最新版本，如果没有显示则表示您的容器名不是${YELLOW}wd-hub${PLAIN}"
+      exit 0
+    ;;
+    "delete")
+      echo -e "${RED}删除当前容器...${PLAIN}"
+      docker stop wd-hub && docker rm wd-hub
+      exit 0
+    ;;
+    "install")
+      hub $@
+      exit 0
+    ;;
+    *)
+      echo -e "${RED}参数错误，请重新运行脚本${PLAIN}"
+      exit 1
+    ;;
+    esac
+  ;;
+  "node")
+    case $2 in
+    "update")
+      echo -e "${BLUE}正在拉取${YELLOW}WatchTower${BLUE}镜像...${PLAIN}"
+      docker pull containrrr/watchtower
+      echo -e "${BLUE}正在更新${YELLOW}WebDriver Node${BLUE}...(可能需要一点时间，请耐心等待)${PLAIN}"
+      docker run --rm -v /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower --run-once --cleanup wd
+      echo -e "${YELLOW}WatchTower${BLUE}运行完毕，接下来将显示Node容器运行状态，如果是几秒前则表示已更新至最新版本${PLAIN}"
+      docker ps --filter "name=wd" --format "{{.Status}}"
+      echo -e "如果时间没有变化则有可能是您的镜像已经是最新版本，如果没有显示则表示您的容器名不是${YELLOW}wd${PLAIN}"
+      exit 0
+    ;;
+    "delete")
+      echo -e "${RED}删除当前容器...${PLAIN}"
+      docker stop wd && docker rm wd
+      exit 0
+    ;;
+    "install")
+      node $@
+      exit 0
+    ;;
+    *)
+      echo -e "${RED}参数错误，请重新运行脚本${PLAIN}"
+      exit 1
+    ;;
+    esac
+  ;;
+  *)
+    echo -e "${RED}参数错误，请重新运行脚本${PLAIN}"
+    exit 1
+  ;;
+  esac
 fi
