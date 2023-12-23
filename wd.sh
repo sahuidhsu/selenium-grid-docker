@@ -139,7 +139,6 @@ node() {
          --shm-size="$memory" --restart=always $docker_node
       fi
     else
-      echo -e "${BLUE}默认使用当前服务器IP作为${RED}要连接的Hub${PLAIN}的地址"
       echo -e "${BLUE}如果本机是动态IP或获取到的IP不正确，请重新运行脚本，并在参数中填写解析到本机的域名${PLAIN}"
       hub_address=$address
       echo -e "默认使用当前服务器IP作为${RED}要连接的Hub${PLAIN}的地址"
@@ -206,6 +205,7 @@ node() {
       if [ "$vncpwd" = "" ] ;then
         vncpwd="secret"
       fi
+      echo -e "${YELLOW}开启VNC调试${PLAIN}"
       echo -e "已设置VNC会话密码：${BLUE}" $vncpwd "${PLAIN}"
       echo -e "${BLUE}开始部署！${PLAIN}"
       docker run -d --name=wd -p $node_port:$node_port -p 5900:5900 -e SE_NODE_HOST=$address \
