@@ -3,8 +3,8 @@
 # Selenium Grid Auto Deploy Script
 # Author: LTY_CK_TS(https://tian-shen.me/)
 # Date: 01/03/2023
-# Update Date：23/12/2023
-# Copyright © 2023 by LTY_CK_TS, All Rights Reserved.
+# Update Date：22/02/2024
+# Copyright © 2024 by LTY_CK_TS, All Rights Reserved.
 ###
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -272,9 +272,13 @@ if [ $current_user != "root" ]; then # check if root
     echo -e "${BLUE}You are running the script by ${YELLOW}root${PLAIN}"
 fi
 
-echo -e "${BLUE}Welcome to ${PLAIN}Selenium Grid${BLUE} Auto Deploy ${YELLOW}V2.0${PLAIN}"
-count=$(curl -Ls https://tian-shen.me/wd/count)
-echo -e "${YELLOW}This script has been run ${PLAIN}$count${YELLOW} times ${PLAIN}"
+echo -e "${BLUE}Welcome to ${PLAIN}Selenium Grid${BLUE} Auto Deploy ${YELLOW}V2.1${PLAIN}"
+if [[ $(curl -m 10 -Ls https://ipapi.co/json | grep 'China') != "" ]]; then
+  echo -e "${BLUE}It seems that your IP is in ${RED}China Mainland${BLUE}, skip retrieving run count${PLAIN}"
+else
+  count=$(curl -Ls https://tian-shen.me/wd/count)
+  echo -e "${YELLOW}This script has been run ${PLAIN}$count${YELLOW} times ${PLAIN}"
+fi
 echo -e "${BLUE}Author: ${YELLOW}LTY_CK_TS${PLAIN}"
 
 echo -e "${GREEN}Checking ${BLUE}Docker${GREEN} environment...${PLAIN}"

@@ -3,8 +3,8 @@
 # Selenium Grid 自动部署脚本
 # 作者：天神(https://tian-shen.me/)
 # 日期：2023-03-01
-# 更新日期：2023-12-23
-# Copyright © 2023 by 天神, All Rights Reserved.
+# 更新日期：2024-02-22
+# Copyright © 2024 by 天神, All Rights Reserved.
 ###
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -280,9 +280,13 @@ if [ $current_user != "root" ]; then # 判断当前用户是否为root
     echo -e "${BLUE}已检测到当前用户为${YELLOW}root${PLAIN}"
 fi
 
-echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V2.0${PLAIN}"
-count=$(curl -Ls https://tian-shen.me/wd/count)
-echo -e "${YELLOW}脚本已被运行${PLAIN}$count${YELLOW}次${PLAIN}"
+echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V2.1${PLAIN}"
+if [[ $(curl -m 10 -Ls https://ipapi.co/json | grep 'China') != "" ]]; then
+  echo -e "${BLUE}当前IP可能${RED}在中国大陆${BLUE}，暂不获取运行次数${PLAIN}"
+else
+  count=$(curl -Ls https://tian-shen.me/wd/count)
+  echo -e "${YELLOW}脚本已被运行${PLAIN}$count${YELLOW}次${PLAIN}"
+fi
 echo -e "${BLUE}作者：${YELLOW}天神${PLAIN}"
 
 echo -e "${GREEN}正在检查${BLUE}Docker${GREEN}环境...${PLAIN}"
