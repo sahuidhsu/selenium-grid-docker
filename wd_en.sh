@@ -80,7 +80,12 @@ hub() {
       echo -e "Port UI has been changed to: ${BLUE}" $portUI "${PLAIN}"
     fi
   fi
-  docker run -d -p $port1:4442 -p $port2:4443 -p $portUI:4444 --name wd-hub --log-opt max-size=1m --log-opt max-file=1 --restart=always $docker_hub
+  echo -e "${RED}To protect Selenium from unauthorized calls, you must set up a username and password for it${PLAIN}"
+  echo -e "${BLUE}Please set the username:${PLAIN}"
+  read username
+  echo -e "${BLUE}Please set the password${PLAIN}"
+  read -s password
+  docker run -d -p $port1:4442 -p $port2:4443 -p $portUI:4444 --name wd-hub --log-opt max-size=1m --log-opt max-file=1 -e SE_OPTS="--username $username --password $password" --restart=always $docker_hub
   echo -e "${BLUE}Hub has been deployed!${PLAIN}"
 }
 
