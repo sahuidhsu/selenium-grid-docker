@@ -80,7 +80,12 @@ hub() {
       echo -e "已修正${RED}WebUI端口${PLAIN}为：${BLUE}" $portUI "${PLAIN}"
     fi
   fi
-  docker run -d -p $port1:4442 -p $port2:4443 -p $portUI:4444 --name wd-hub --log-opt max-size=1m --log-opt max-file=1 --restart=always $docker_hub
+  echo -e "${RED}为防止Selenium受到未授权的调用，您必须为其设置用户名和密码${PLAIN}"
+  echo -e "${BLUE}请输入用户名：${PLAIN}"
+  read username
+  echo -e "${BLUE}请输入密码：${PLAIN}"
+  read -s password
+  docker run -d -p $port1:4442 -p $port2:4443 -p $portUI:4444 --name wd-hub --log-opt max-size=1m --log-opt max-file=1 -e SE_OPTS="--username $username --password $password" --restart=always $docker_hub
   echo -e "${BLUE}Hub部署完毕${PLAIN}"
 }
 
