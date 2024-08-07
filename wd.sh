@@ -84,7 +84,7 @@ hub() {
   echo -e "${BLUE}请输入用户名：${PLAIN}"
   read username
   echo -e "${BLUE}请输入密码：${PLAIN}"
-  read -s password
+  read password
   docker run -d -p $port1:4442 -p $port2:4443 -p $portUI:4444 --name wd-hub --log-opt max-size=1m --log-opt max-file=1 -e SE_OPTS="--username $username --password $password" --restart=always $docker_hub
   echo -e "${BLUE}Hub部署完毕${PLAIN}"
 }
@@ -231,10 +231,46 @@ node() {
   echo -e "${BLUE}Node部署完毕${PLAIN}"
 }
 
+standalone() {
+  echo -e "${BLUE}开始准备部署${RED}Standalone${BLUE}，即将开始拉取最新版本Standalone镜像${PLAIN}${PLAIN}"
+  sleep 2
+  docker pull $docker_standalone
+  echo -e "${BLUE}拉取完毕！${PLAIN}"
+  if [ $delete = true ]; then
+    echo -e "${YELLOW}正在删除旧镜像...${PLAIN}"
+    image_id=$(docker images | grep "$docker_standalone" | grep "latest" | awk '{print $3}')
+    docker rmi $(docker images | grep "$docker_standalone" | grep -v "$image_id" | awk '{print $3}')
+    echo -e "${BLUE}删除完毕！${PLAIN}"
+  fi
+  if [ $# -gt 0 ] ;then
+    echo -e "${RED}暂不支持使用参数部署Standalone${PLAIN}"
+  else
+    echo -e "${BLUE}默认使用${YELLOW}4444${BLUE}作为Selenium运行端口${PLAIN}"
+    port=4444
+    read -p "如需修改请输入新的Selenium运行端口(留空则使用默认的4444)：" port
+    if [ "$port" = "" ]; then
+      port=4444
+    fi
+    read -p "请输入分配的内存(e.g. 512m 或 2g)：" memory
+    read -p "请输入最大进程数：" number
+    echo -e "${RED}为防止Selenium受到未授权的调用，您必须为其设置用户名和密码${PLAIN}"
+    echo -e "${BLUE}请输入用户名：${PLAIN}"
+    read username
+    echo -e "${BLUE}请输入密码：${PLAIN}"
+    read password
+    docker run -d --name=webdriver -p $port:4444 --shm-size="$memory" --restart=always \
+      -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 \
+      -e SE_START_VNC=false -e SE_OPTS="--username $username --password $password" \
+      --log-opt max-size=1m --log-opt max-file=1 $docker_standalone
+    echo -e "${BLUE}Standalone部署完毕${PLAIN}"
+  fi
+}
+
 mac=false # 判断是否为macOS
 delete=false # 判断是否删除旧镜像
 docker_hub="selenium/hub" # 默认x86 Hub镜像
 docker_node="selenium/node-chrome" # 默认x86 Node镜像
+docker_standalone="selenium/standalone-chrome" # 默认x86 Standalone镜像
 
 # 判断系统架构
 arch=$(uname -m)
@@ -243,17 +279,19 @@ if [ $arch == "x86_64" ]; then
   elif [ $arch == "aarch64" ]; then
     docker_hub="seleniarm/hub" # arm64 Hub镜像
     docker_node="seleniarm/node-chromium" # arm64 Node镜像
+    docker_standalone = "seleniarm/standalone-chromium" # arm64 Standalone镜像
     echo -e "${BLUE}已检测到系统架构为${YELLOW}arm64 ${BLUE}已自动切换到arm镜像${PLAIN}"
   elif [ $arch == "armv7l" ]; then
     docker_hub="seleniarm/hub" # arm32 Hub镜像
     docker_node="seleniarm/node-chromium" # arm32 Node镜像
+    docker_standalone = "seleniarm/standalone-chromium" # arm32 Standalone镜像
     echo -e "${BLUE}已检测到系统架构为${YELLOW}arm32 ${BLUE}已自动切换到arm镜像${PLAIN}"
   else
     echo -e "${BLUE}已检测到系统架构为${YELLOW}$arch${PLAIN}"
     echo -e "${RED}脚本不支持当前系统架构！退出脚本${PLAIN}"
     exit 1
 fi
-echo -e "Hub镜像：${YELLOW}$docker_hub${PLAIN} | Node镜像：${YELLOW}$docker_node${PLAIN}"
+echo -e "Hub镜像：${YELLOW}$docker_hub${PLAIN} | Node镜像：${YELLOW}$docker_node${PLAIN} | Standalone镜像：${YELLOW}$docker_standalone${PLAIN}"
 
 # 判断用户是否有权限执行docker命令
 current_user=$(whoami)
@@ -320,30 +358,42 @@ show_menu() {
   echo -e "${GREEN}请选择模式：${PLAIN}"
   echo -e "${BLUE}1.${YELLOW} 初始部署${PLAIN}WebDriver Hub(中心管理)"
   echo -e "${BLUE}2.${YELLOW} 初始部署${PLAIN}WebDriver Node(节点)"
-  echo -e "${BLUE}3.${YELLOW} 一键更新${PLAIN}WebDriver Hub(使用WatchTower镜像实现)"
-  echo -e "${BLUE}4.${YELLOW} 一键更新${PLAIN}WebDriver Node(使用WatchTower镜像实现)"
-  echo -e "${BLUE}5.${YELLOW} 删除${PLAIN}WebDriver Hub"
-  echo -e "${BLUE}6.${YELLOW} 删除${PLAIN}WebDriver Node"
-  echo -e "${BLUE}7.${YELLOW} 手动更新${PLAIN}WebDriver Hub"
-  echo -e "${BLUE}8.${YELLOW} 手动更新${PLAIN}WebDriver Node"
+  echo -e "${BLUE}3.${YELLOW} 初始部署${PLAIN}WebDriver Standalone(单机版)"
+  echo -e "${BLUE}4.${YELLOW} 一键更新${PLAIN}WebDriver Hub(使用WatchTower镜像实现)"
+  echo -e "${BLUE}5.${YELLOW} 一键更新${PLAIN}WebDriver Node(使用WatchTower镜像实现)"
+  echo -e "${BLUE}6.${YELLOW} 一键更新${PLAIN}WebDriver Standalone(使用WatchTower镜像实现)"
+  echo -e "${BLUE}7.${YELLOW} 删除${PLAIN}WebDriver Hub"
+  echo -e "${BLUE}8.${YELLOW} 删除${PLAIN}WebDriver Node"
+  echo -e "${BLUE}9.${YELLOW} 删除${PLAIN}WebDriver Standalone"
+  echo -e "${BLUE}10.${YELLOW} 重新安装${PLAIN}WebDriver Hub"
+  echo -e "${BLUE}11.${YELLOW} 重新安装${PLAIN}WebDriver Node"
+  echo -e "${BLUE}12.${YELLOW} 重新安装${PLAIN}WebDriver Standalone"
   echo -e "${BLUE}0.${YELLOW} 退出脚本${PLAIN}"
-  echo -e "${RED}请注意：${BLUE}如果您选择3,4,7,8(更新容器)或5,6(删除容器)"
-  echo -e "请确保您Hub的容器名是${YELLOW}wd-hub${BLUE}/Node的容器名是${YELLOW}wd${BLUE}"
+  echo -e "${RED}请注意：${BLUE}如果您选择4~12(更新、删除、重装)"
+  echo -e "请确保您Hub的容器名是${YELLOW}wd-hub${BLUE}/Node的容器名是${YELLOW}wd${BLUE}/Standalone的容器名是${YELLOW}webdriver${PLAIN}"
   echo -e "否则将无法正确识别容器，可能导致出现异常！${PLAIN}"
-  echo -e "${YELLOW}(7)(8)更新脚本需要重新输入部署参数，而(3)(4)一键更新会自动继承当前容器的参数，无需重新输入${PLAIN}"
   read -p "请输入数字：" mode
   case $mode in
   "1")
+  # 安装Hub
     clear
     hub
     exit 0
   ;;
   "2")
+  # 安装Node
     clear
     node
     exit 0
   ;;
   "3")
+  # 安装Standalone
+    clear
+    standalone
+    exit 0
+  ;;
+  "4")
+  # 更新Hub
     clear
     echo -e "${BLUE}正在拉取${YELLOW}WatchTower${BLUE}镜像...${PLAIN}"
     docker pull containrrr/watchtower
@@ -354,7 +404,8 @@ show_menu() {
     echo -e "如果时间没有变化则有可能是您的镜像已经是最新版本，如果没有显示则表示您的容器名不是${YELLOW}wd-hub${PLAIN}"
     exit 0
   ;;
-  "4")
+  "5")
+  # 更新Node
     clear
     echo -e "${BLUE}正在拉取${YELLOW}WatchTower${BLUE}镜像...${PLAIN}"
     docker pull containrrr/watchtower
@@ -365,17 +416,38 @@ show_menu() {
     echo -e "如果时间没有变化则有可能是您的镜像已经是最新版本，如果没有显示则表示您的容器名不是${YELLOW}wd${PLAIN}"
     exit 0
   ;;
-  "5")
+  "6")
+  # 更新Standalone
+    clear
+    echo -e "${BLUE}正在拉取${YELLOW}WatchTower${BLUE}镜像...${PLAIN}"
+    docker pull containrrr/watchtower
+    echo -e "${BLUE}正在更新${YELLOW}WebDriver Standalone${BLUE}...(可能需要一点时间，请耐心等待)${PLAIN}"
+    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower --run-once --cleanup webdriver
+    echo -e "${YELLOW}WatchTower${BLUE}运行完毕，接下来将显示webdriver容器运行状态，如果是几秒前则表示已更新至最新版本${PLAIN}"
+    docker ps --filter "name=webdriver" --format "{{.Status}}"
+    echo -e "如果时间没有变化则有可能是您的镜像已经是最新版本，如果没有显示则表示您的容器名不是${YELLOW}webdriver${PLAIN}"
+    exit 0
+  ;;
+  "7")
+  # 删除Hub
     echo -e "${RED}删除当前容器...${PLAIN}"
     docker stop wd-hub && docker rm wd-hub
     exit 0
   ;;
-  "6")
+  "8")
+  # 删除Node
     echo -e "${RED}删除当前容器...${PLAIN}"
     docker stop wd && docker rm wd
     exit 0
   ;;
-  "7")
+  "9")
+  # 删除Standalone
+    echo -e "${RED}删除当前容器...${PLAIN}"
+    docker stop webdriver && docker rm webdriver
+    exit 0
+  ;;
+  "10")
+  # 重装Hub
     clear
     echo -e "${RED}删除当前容器...${PLAIN}"
     docker stop wd-hub && docker rm wd-hub
@@ -383,12 +455,22 @@ show_menu() {
     hub
     exit 0
   ;;
-  "8")
+  "11")
+  # 重装Node
     clear
     echo -e "${RED}删除当前容器...${PLAIN}"
     docker stop wd && docker rm wd
     delete=true
     node
+    exit 0
+  ;;
+  "12")
+  # 重装Standalone
+    clear
+    echo -e "${RED}删除当前容器...${PLAIN}"
+    docker stop webdriver && docker rm webdriver
+    delete=true
+    standalone
     exit 0
   ;;
   "0")
