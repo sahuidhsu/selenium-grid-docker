@@ -8,7 +8,7 @@
     </a>
     <img src="https://img.shields.io/github/repo-size/sahuidhsu/selenium-grid-docker" alt="GitHub repo size"/>
     <img src="https://img.shields.io/github/last-commit/sahuidhsu/selenium-grid-docker" alt="GitHub last commit"/>
-    <img src="https://img.shields.io/badge/version-2.1-blue" alt="current version"/>
+    <img src="https://img.shields.io/badge/version-2.2-blue" alt="current version"/>
 </p>
 <h3 align="center"><a href="README.md">中文文档</a> | English </h3>
 <h3 align="center">A convenient and quick Selenium WebDriver Docker deployment script </h3>

@@ -3,7 +3,7 @@
 # Selenium Grid 自动部署脚本
 # 作者：天神(https://tian-shen.me/)
 # 日期：2023-03-01
-# 更新日期：2024-02-22
+# 更新日期：2024-08-09
 # Copyright © 2024 by 天神, All Rights Reserved.
 ###
 RED='\033[0;31m'
@@ -11,6 +11,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 PLAIN='\033[0m'
 BLUE="\033[36m"
+VERSION="2.2"
 
 not_root() {
   echo -e "${YELLOW}Warning:${PLAIN}当前非root用户，但本用户似乎可以直接使用docker命令"
@@ -337,7 +338,7 @@ if [ $current_user != "root" ]; then # 判断当前用户是否为root
     echo -e "${BLUE}已检测到当前用户为${YELLOW}root${PLAIN}"
 fi
 
-echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V2.1${PLAIN}"
+echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELLOW}V${VERSION}${PLAIN}"
 if [[ $(curl -m 10 -Ls https://ipapi.co/json | grep 'China') != "" ]]; then
   echo -e "${BLUE}当前IP可能${RED}在中国大陆${BLUE}，暂不获取运行次数${PLAIN}"
 else
