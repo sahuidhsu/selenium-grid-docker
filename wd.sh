@@ -251,8 +251,22 @@ standalone() {
     if [ "$port" = "" ]; then
       port=4444
     fi
-    read -p "请输入分配的内存(e.g. 512m 或 2g)：" memory
-    read -p "请输入最大进程数：" number
+    while true; do
+      read -p "请输入分配的内存(例如 512m 或 2g，需要带单位)：" memory
+      if [ -z "$memory" ]; then
+        echo -e "${RED}内存分配不能为空，请重新输入。${PLAIN}"
+      else
+        break
+      fi
+    done
+    while true; do
+      read -p "请输入最大进程数：" number
+      if [ -z "$number" ]; then
+        echo -e "${RED}最大进程数不能为空，请重新输入。${PLAIN}"
+      else
+        break
+      fi
+    done
     echo -e "${RED}为防止Selenium受到未授权的调用，您必须为其设置用户名和密码${PLAIN}"
     echo -e "${BLUE}请输入用户名：${PLAIN}"
     read username
