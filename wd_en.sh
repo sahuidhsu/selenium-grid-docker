@@ -84,7 +84,7 @@ hub() {
   echo -e "${BLUE}Please set the username:${PLAIN}"
   read username
   echo -e "${BLUE}Please set the password${PLAIN}"
-  read -s password
+  read password
   docker run -d -p $port1:4442 -p $port2:4443 -p $portUI:4444 --name wd-hub --log-opt max-size=1m --log-opt max-file=1 -e SE_OPTS="--username $username --password $password" --restart=always $docker_hub
   echo -e "${BLUE}Hub has been deployed!${PLAIN}"
 }
@@ -223,10 +223,60 @@ node() {
   echo -e "${BLUE}Deploy complete!${PLAIN}"
 }
 
+standalone() {
+  echo -e "${BLUE}Starting to prepare deployment of ${RED}Standalone${BLUE}, pulling the latest version of the Standalone image${PLAIN}${PLAIN}"
+  sleep 2
+  docker pull $docker_standalone
+  echo -e "${BLUE}Pull complete!${PLAIN}"
+  if [ $delete = true ]; then
+    echo -e "${YELLOW}Deleting old images...${PLAIN}"
+    image_id=$(docker images | grep "$docker_standalone" | grep "latest" | awk '{print $3}')
+    docker rmi $(docker images | grep "$docker_standalone" | grep -v "$image_id" | awk '{print $3}')
+    echo -e "${BLUE}Deletion complete!${PLAIN}"
+  fi
+  if [ $# -gt 0 ] ;then
+    echo -e "${RED}Deploying Standalone with parameters is not supported yet${PLAIN}"
+  else
+    echo -e "${BLUE}Using default port ${YELLOW}4444${BLUE} for Selenium${PLAIN}"
+    port=4444
+    read -p "Enter a new port for Selenium (leave empty to use default 4444): " port
+    if [ "$port" = "" ]; then
+      port=4444
+    fi
+    while true; do
+      read -p "Enter allocated memory (e.g., 512m or 2g): " memory
+      if [ -z "$memory" ]; then
+        echo -e "${RED}Memory allocation cannot be empty, please enter again.${PLAIN}"
+      else
+        break
+      fi
+    done
+    while true; do
+      read -p "Enter maximum number of processes: " number
+      if [ -z "$number" ]; then
+        echo -e "${RED}Maximum number of processes cannot be empty, please enter again.${PLAIN}"
+      else
+        break
+      fi
+    done
+    echo -e "${RED}To prevent unauthorized calls to Selenium, you must set a username and password for it${PLAIN}"
+    echo -e "${BLUE}Enter username: ${PLAIN}"
+    read username
+    echo -e "${BLUE}Enter password: ${PLAIN}"
+    read password
+    docker run -d --name=webdriver -p $port:4444 --shm-size="$memory" --restart=always \
+      -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 \
+      -e SE_START_VNC=false -e SE_OPTS="--username $username --password $password" \
+      --log-opt max-size=1m --log-opt max-file=1 $docker_standalone
+    echo -e "${BLUE}Standalone deployment complete${PLAIN}"
+  fi
+}
+
 mac=false # check if mac
 delete=false # check if delete
 docker_hub="selenium/hub" # By default, the x86 Hub image is used
 docker_node="selenium/node-chrome" # By default, the x86 Node image is used
+docker_standalone="selenium/standalone-chrome" # By default, the x86 Standalone image is used
 
 # Check System
 arch=$(uname -m)
@@ -235,10 +285,12 @@ if [ $arch == "x86_64" ]; then
   elif [ $arch == "aarch64" ]; then
     docker_hub="seleniarm/hub" # arm64 Hub image
     docker_node="seleniarm/node-chromium" # arm64 Node image
+    docker_standalone = "seleniarm/standalone-chromium" # arm64 Standalone Image
     echo -e "${BLUE}System architecture detected as ${YELLOW}arm64${BLUE}. Using ARM images${PLAIN}"
   elif [ $arch == "armv7l" ]; then
     docker_hub="seleniarm/hub" # arm32 Hub Image
     docker_node="seleniarm/node-chromium" # arm32 Node Image
+    docker_standalone = "seleniarm/standalone-chromium" # arm32 Standalone Image
     echo -e "${BLUE}System architecture detected as ${YELLOW}arm32${BLUE}. Using ARM images${PLAIN}"
   else
     echo -e "${BLUE}System architecture detected as ${YELLOW}$arch${PLAIN}"
@@ -309,33 +361,45 @@ else
 fi
 
 show_menu() {
-  echo -e "${GREEN}Choose an option:${PLAIN}"
-  echo -e "${BLUE}1.${YELLOW} Initial deploy${PLAIN} - WebDriver Hub(central management)"
-  echo -e "${BLUE}2.${YELLOW} Initial deploy${PLAIN} - WebDriver Node"
-  echo -e "${BLUE}3.${YELLOW} Update ${PLAIN}WebDriver Hub and preserve data(using WatchTower image)"
-  echo -e "${BLUE}4.${YELLOW} Update ${PLAIN}WebDriver Node and preserve data(using WatchTower image)"
-  echo -e "${BLUE}5.${YELLOW} Delete ${PLAIN}WebDriver Hub"
-  echo -e "${BLUE}6.${YELLOW} Delete ${PLAIN}WebDriver Node"
-  echo -e "${BLUE}7.${YELLOW} Update ${PLAIN}WebDriver Hub without preserving data"
-  echo -e "${BLUE}8.${YELLOW} Update ${PLAIN}WebDriver Node without preserving data"
-  echo -e "${BLUE}0.${YELLOW} Exit${PLAIN}"
-  echo -e "${RED}Caution: ${BLUE}if you choose 3 ~ 8, please make sure the containers are deployed by this script!${PLAIN}"
-  echo -e "That is, hub container using name: ${YELLOW}wd-hub${PLAIN} and node container using name: ${YELLOW}wd${PLAIN}"
-  echo -e "Otherwise the containers would not be detected correctly and causing unwanted errors!${PLAIN}"
-  echo -e "${YELLOW}You have to re-enter arguments when updating using(7)(8), while(3)(4)provides arguments preservation.${PLAIN}"
-  read -p "Enter your choice: " mode
+  echo -e "${GREEN}Please select a mode:${PLAIN}"
+  echo -e "${BLUE}1.${YELLOW} Initial deployment of${PLAIN} WebDriver Hub (central management)"
+  echo -e "${BLUE}2.${YELLOW} Initial deployment of${PLAIN} WebDriver Node"
+  echo -e "${BLUE}3.${YELLOW} Initial deployment of${PLAIN} WebDriver Standalone"
+  echo -e "${BLUE}4.${YELLOW} One-click update of${PLAIN} WebDriver Hub (using WatchTower)"
+  echo -e "${BLUE}5.${YELLOW} One-click update of${PLAIN} WebDriver Node (using WatchTower)"
+  echo -e "${BLUE}6.${YELLOW} One-click update of${PLAIN} WebDriver Standalone (using WatchTower)"
+  echo -e "${BLUE}7.${YELLOW} Delete${PLAIN} WebDriver Hub"
+  echo -e "${BLUE}8.${YELLOW} Delete${PLAIN} WebDriver Node"
+  echo -e "${BLUE}9.${YELLOW} Delete${PLAIN} WebDriver Standalone"
+  echo -e "${BLUE}10.${YELLOW} Reinstall${PLAIN} WebDriver Hub"
+  echo -e "${BLUE}11.${YELLOW} Reinstall${PLAIN} WebDriver Node"
+  echo -e "${BLUE}12.${YELLOW} Reinstall${PLAIN} WebDriver Standalone"
+  echo -e "${BLUE}0.${YELLOW} Exit script${PLAIN}"
+  echo -e "${RED}Note:${BLUE} If you choose options 4~12 (update, delete, reinstall)"
+  echo -e "Please ensure your Hub container name is${YELLOW} wd-hub${BLUE}, Node container name is${YELLOW} wd${BLUE}, and Standalone container name is${YELLOW} webdriver${PLAIN}"
+  echo -e "Otherwise, the container may not be recognized correctly, which may cause issues!${PLAIN}"
+  read -p "Please enter a number: " mode
   case $mode in
-  1)
+  "1")
+  # Install Hub
     clear
     hub
     exit 0
   ;;
-  2)
+  "2")
+  # Install Node
     clear
     node
     exit 0
   ;;
-  3)
+  "3")
+  # Install Standalone
+    clear
+    standalone
+    exit 0
+  ;;
+  "4")
+  # Update Hub
     clear
     echo -e "${BLUE}Pulling ${YELLOW}WatchTower${BLUE} image...${PLAIN}"
     docker pull containrrr/watchtower
@@ -346,7 +410,8 @@ show_menu() {
     echo -e "If it's not, your hub image may already be the latest one. If no line is presented, then your container is not named ${YELLOW}wd-hub${PLAIN}"
     exit 0
   ;;
-  4)
+  "5")
+  # Update Node
     clear
     echo -e "${BLUE}Pulling ${YELLOW}WatchTower${BLUE} image...${PLAIN}"
     docker pull containrrr/watchtower
@@ -357,17 +422,38 @@ show_menu() {
     echo -e "If it's not, your node image may already be the latest one. If no line is presented, then your container is not named ${YELLOW}wd${PLAIN}"
     exit 0
   ;;
-  5)
+  "6")
+  # Update Standalone
+    clear
+    echo -e "${BLUE}Pulling the ${YELLOW}WatchTower${BLUE} image...${PLAIN}"
+    docker pull containrrr/watchtower
+    echo -e "${BLUE}Updating ${YELLOW}WebDriver Standalone${BLUE}...(this may take some time, please be patient)${PLAIN}"
+    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower --run-once --cleanup webdriver
+    echo -e "${YELLOW}WatchTower ${BLUE}completed, if the line below showing 'Up X seconds', then the update is successful!${PLAIN}"
+    docker ps --filter "name=webdriver" --format "{{.Status}}"
+    echo -e "If it's not, your hub image may already be the latest one. If no line is presented, then your container is not named ${YELLOW}webdriver${PLAIN}"
+    exit 0
+  ;;
+  "7")
+  # Delete Hub
     echo -e "${RED}Deleting...${PLAIN}"
     docker stop wd-hub && docker rm wd-hub
     exit 0
   ;;
-  6)
+  "8")
+  # Delete node
     echo -e "${RED}Deleting...${PLAIN}"
     docker stop wd && docker rm wd
     exit 0
   ;;
-  7)
+  "9")
+  # Delete Standalone
+    echo -e "${RED}Deleting...${PLAIN}"
+    docker stop webdriver && docker rm webdriver
+    exit 0
+  ;;
+  "10")
+  # Reinstall Hub
     clear
     echo -e "${RED}Deleting...${PLAIN}"
     docker stop wd-hub && docker rm wd-hub
@@ -375,12 +461,22 @@ show_menu() {
     hub
     exit 0
   ;;
-  8)
+  "11")
+  # Reinstall Node
     clear
     echo -e "${RED}Deleting...${PLAIN}"
     docker stop wd && docker rm wd
     delete=true
     node
+    exit 0
+  ;;
+  "12")
+  # Reinstall Standalone
+    clear
+    echo -e "${RED}Deleting...${PLAIN}"
+    docker stop webdriver && docker rm webdriver
+    delete=true
+    standalone
     exit 0
   ;;
   0)
