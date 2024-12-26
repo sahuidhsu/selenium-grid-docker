@@ -3,7 +3,7 @@
 # Selenium Grid 自动部署脚本
 # 作者：天神(https://tian-shen.me/)
 # 日期：2023-03-01
-# 更新日期：2024-08-09
+# 更新日期：2024-12-26
 # Copyright © 2024 by 天神, All Rights Reserved.
 ###
 RED='\033[0;31m'
@@ -342,7 +342,7 @@ echo -e "${BLUE}欢迎使用${PLAIN}Selenium Grid${BLUE}自动部署脚本${YELL
 if [[ $(curl -m 10 -Ls https://ipapi.co/json | grep 'China') != "" ]]; then
   echo -e "${BLUE}当前IP可能${RED}在中国大陆${BLUE}，暂不获取运行次数${PLAIN}"
 else
-  count=$(curl -Ls https://tian-shen.me/wd/count)
+  count=$(curl -m 10 -Ls https://tian-shen.me/wd/count)
   echo -e "${YELLOW}脚本已被运行${PLAIN}$count${YELLOW}次${PLAIN}"
 fi
 echo -e "${BLUE}作者：${YELLOW}天神${PLAIN}"

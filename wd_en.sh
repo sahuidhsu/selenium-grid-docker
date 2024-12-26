@@ -3,7 +3,7 @@
 # Selenium Grid Auto Deploy Script
 # Author: LTY_CK_TS(https://tian-shen.me/)
 # Date: 01/03/2023
-# Update Date：09/08/2024
+# Update Date：26/12/2024
 # Copyright © 2024 by LTY_CK_TS, All Rights Reserved.
 ###
 RED='\033[0;31m'
@@ -334,7 +334,7 @@ echo -e "${BLUE}Welcome to ${PLAIN}Selenium Grid${BLUE} Auto Deploy ${YELLOW}V${
 if [[ $(curl -m 10 -Ls https://ipapi.co/json | grep 'China') != "" ]]; then
   echo -e "${BLUE}It seems that your IP is in ${RED}China Mainland${BLUE}, skip retrieving run count${PLAIN}"
 else
-  count=$(curl -Ls https://tian-shen.me/wd/count)
+  count=$(curl -m 10 -Ls https://tian-shen.me/wd/count)
   echo -e "${YELLOW}This script has been run ${PLAIN}$count${YELLOW} times ${PLAIN}"
 fi
 echo -e "${BLUE}Author: ${YELLOW}LTY_CK_TS${PLAIN}"
