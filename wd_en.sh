@@ -286,12 +286,12 @@ if [ $arch == "x86_64" ]; then
   elif [ $arch == "aarch64" ]; then
     docker_hub="seleniarm/hub" # arm64 Hub image
     docker_node="seleniarm/node-chromium" # arm64 Node image
-    docker_standalone = "seleniarm/standalone-chromium" # arm64 Standalone Image
+    docker_standalone="seleniarm/standalone-chromium" # arm64 Standalone Image
     echo -e "${BLUE}System architecture detected as ${YELLOW}arm64${BLUE}. Using ARM images${PLAIN}"
   elif [ $arch == "armv7l" ]; then
     docker_hub="seleniarm/hub" # arm32 Hub Image
     docker_node="seleniarm/node-chromium" # arm32 Node Image
-    docker_standalone = "seleniarm/standalone-chromium" # arm32 Standalone Image
+    docker_standalone="seleniarm/standalone-chromium" # arm32 Standalone Image
     echo -e "${BLUE}System architecture detected as ${YELLOW}arm32${BLUE}. Using ARM images${PLAIN}"
   else
     echo -e "${BLUE}System architecture detected as ${YELLOW}$arch${PLAIN}"

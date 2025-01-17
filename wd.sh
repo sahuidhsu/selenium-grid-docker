@@ -294,12 +294,12 @@ if [ $arch == "x86_64" ]; then
   elif [ $arch == "aarch64" ]; then
     docker_hub="seleniarm/hub" # arm64 Hub镜像
     docker_node="seleniarm/node-chromium" # arm64 Node镜像
-    docker_standalone = "seleniarm/standalone-chromium" # arm64 Standalone镜像
+    docker_standalone="seleniarm/standalone-chromium" # arm64 Standalone镜像
     echo -e "${BLUE}已检测到系统架构为${YELLOW}arm64 ${BLUE}已自动切换到arm镜像${PLAIN}"
   elif [ $arch == "armv7l" ]; then
     docker_hub="seleniarm/hub" # arm32 Hub镜像
     docker_node="seleniarm/node-chromium" # arm32 Node镜像
-    docker_standalone = "seleniarm/standalone-chromium" # arm32 Standalone镜像
+    docker_standalone="seleniarm/standalone-chromium" # arm32 Standalone镜像
     echo -e "${BLUE}已检测到系统架构为${YELLOW}arm32 ${BLUE}已自动切换到arm镜像${PLAIN}"
   else
     echo -e "${BLUE}已检测到系统架构为${YELLOW}$arch${PLAIN}"
