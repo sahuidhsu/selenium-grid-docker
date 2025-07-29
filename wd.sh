@@ -3,7 +3,7 @@
 # Selenium Grid 自动部署脚本
 # 作者：天神(https://tian-shen.me/)
 # 日期：2023-03-01
-# 更新日期：2024-12-26
+# 更新日期：2025-07-29
 # Copyright © 2024 by 天神, All Rights Reserved.
 ###
 RED='\033[0;31m'
@@ -201,7 +201,11 @@ node() {
       node_port=$node_port_enter
       echo -e "已修正${RED}当前节点通讯端口${PLAIN}为：${BLUE}" $node_port "${PLAIN}"
     fi
-    read -p "请输入分配的内存(e.g. 512m 或 2g)：" memory
+    read -p "请输入共享内存大小（推荐 2g，必须带单位）：" memory
+    while [[ ! "$memory" =~ ^[0-9]+[mMgG]$ ]]; do
+      echo -e "${RED}格式错误，必须带单位。${PLAIN}"
+      read -p "请输入共享内存大小（推荐 2g，必须带单位）：" memory
+    done
     read -p "请输入最大进程数：" number
     echo -e "${BLUE}是否需要打开VNC调试功能(${RED}会打开5900端口${BLUE})?${PLAIN}"
     read -p "请输入选择，留空默认不开启(y/N)：" vnc
@@ -252,13 +256,10 @@ standalone() {
     if [ "$port" = "" ]; then
       port=4444
     fi
-    while true; do
-      read -p "请输入分配的内存(例如 512m 或 2g，需要带单位)：" memory
-      if [ -z "$memory" ]; then
-        echo -e "${RED}内存分配不能为空，请重新输入。${PLAIN}"
-      else
-        break
-      fi
+    read -p "请输入共享内存大小（推荐 2g，必须带单位）：" memory
+    while [[ ! "$memory" =~ ^[0-9]+[mMgG]$ ]]; do
+      echo -e "${RED}格式错误，必须带单位。${PLAIN}"
+      read -p "请输入共享内存大小（推荐 2g，必须带单位）：" memory
     done
     while true; do
       read -p "请输入最大进程数：" number
