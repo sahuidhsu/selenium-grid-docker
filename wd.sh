@@ -85,7 +85,8 @@ hub() {
   echo -e "${BLUE}请输入用户名：${PLAIN}"
   read username
   echo -e "${BLUE}请输入密码：${PLAIN}"
-  read password
+  read -s password
+  echo
   docker run -d -p $port1:4442 -p $port2:4443 -p $portUI:4444 --name wd-hub --log-opt max-size=1m --log-opt max-file=1 -e SE_OPTS="--username $username --password $password" --restart=always $docker_hub
   echo -e "${BLUE}Hub部署完毕${PLAIN}"
 }
@@ -128,12 +129,15 @@ node() {
       vnc=${10}
       if [ "$vnc" = "y" ] ;then
         vnc_pwd=${11}
-        echo -e "${BLUE}已修正VNC会话密码为：${BLUE}" $vnc_pwd "${PLAIN}"
+        if [ -z "$vnc_pwd" ]; then
+          echo -e "${RED}启用VNC时密码不能为空${PLAIN}"
+          exit 1
+        fi
         echo -e "${BLUE}开始部署！${PLAIN}"
         docker run -d --name=wd -p $node_port:$node_port -p 5900:5900 -e SE_NODE_HOST=$address \
         -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 \
         -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true \
-        -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 -e SE_VNC_PASSWORD="$vncpwd" --log-opt max-size=1m \
+        -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 -e SE_VNC_PASSWORD="$vnc_pwd" --log-opt max-size=1m \
         --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
       else
         echo -e "${YELLOW}关闭VNC调试${PLAIN}"
@@ -211,12 +215,12 @@ node() {
     read -p "请输入选择，留空默认不开启(y/N)：" vnc
     if [ "$vnc" = "y" ] ;then
       echo -e "${YELLOW}打开VNC调试${PLAIN}"
-      read -p "请设置VNC会话密码(留空则使用默认密码 'secret')：" vncpwd
+      read -s -p "请设置VNC会话密码(留空则使用默认密码 'secret')：" vncpwd
+      echo
       if [ "$vncpwd" = "" ] ;then
         vncpwd="secret"
       fi
       echo -e "${YELLOW}开启VNC调试${PLAIN}"
-      echo -e "已设置VNC会话密码：${BLUE}" $vncpwd "${PLAIN}"
       echo -e "${BLUE}开始部署！${PLAIN}"
       docker run -d --name=wd -p $node_port:$node_port -p 5900:5900 -e SE_NODE_HOST=$address \
       -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 \
@@ -273,7 +277,8 @@ standalone() {
     echo -e "${BLUE}请输入用户名：${PLAIN}"
     read username
     echo -e "${BLUE}请输入密码：${PLAIN}"
-    read password
+    read -s password
+    echo
     docker run -d --name=webdriver -p $port:4444 --shm-size="$memory" --restart=always \
       -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 \
       -e SE_START_VNC=false -e SE_OPTS="--username $username --password $password" \
@@ -362,10 +367,10 @@ else
       echo -e "${RED}已取消安装${PLAIN}"
       exit 1
     else
-      echo -e "${BLUE}开始安装...${PLAIN}"
-      docker version > /dev/null || curl -fsSL get.docker.com | bash
-      systemctl enable docker && systemctl restart docker
-      echo -e "${BLUE}Docker${GREEN}安装完成${PLAIN}"
+      echo -e "${YELLOW}出于安全考虑，脚本已禁用自动安装Docker。${PLAIN}"
+      echo -e "${YELLOW}请通过系统包管理器或Docker官方文档手动安装Docker：${PLAIN}"
+      echo -e "${BLUE}https://docs.docker.com/engine/install/${PLAIN}"
+      exit 1
     fi
   fi
 fi
