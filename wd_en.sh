@@ -3,7 +3,7 @@
 # Selenium Grid Auto Deploy Script
 # Author: LTY_CK_TS(https://tian-shen.me/)
 # Date: 01/03/2023
-# Update Date：26/12/2024
+# Update Date：25/10/2026
 # Copyright © 2024 by LTY_CK_TS, All Rights Reserved.
 ###
 RED='\033[0;31m'
@@ -11,7 +11,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 PLAIN='\033[0m'
 BLUE="\033[36m"
-VERSION="2.2"
+VERSION="2.3"
 
 not_root() {
   echo -e "${YELLOW}Warning:${PLAIN}not running in root privilege, but it seems docker command can be used directly"
@@ -85,7 +85,8 @@ hub() {
   echo -e "${BLUE}Please set the username:${PLAIN}"
   read username
   echo -e "${BLUE}Please set the password${PLAIN}"
-  read password
+  read -s password
+  echo
   docker run -d -p $port1:4442 -p $port2:4443 -p $portUI:4444 --name wd-hub --log-opt max-size=1m --log-opt max-file=1 -e SE_OPTS="--username $username --password $password" --restart=always $docker_hub
   echo -e "${BLUE}Hub has been deployed!${PLAIN}"
 }
@@ -129,12 +130,15 @@ node() {
       if [ "$vnc" = "y" ] ;then
         vnc_pwd=${11}
         echo -e "${YELLOW}VNC function turned on${PLAIN}"
-        echo -e "${RED}VNC password ${PLAIN}has been changed to: ${BLUE}" $vnc_pwd "${PLAIN}"
+        if [ -z "$vnc_pwd" ]; then
+          echo -e "${RED}VNC password cannot be empty when VNC is enabled${PLAIN}"
+          exit 1
+        fi
         echo -e "${BLUE}Start deploying!${PLAIN}"
         docker run -d --name=wd -p $node_port:$node_port -p 5900:5900 -e SE_NODE_HOST=$address \
         -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 \
         -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true \
-        -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 -e SE_VNC_PASSWORD="$vncpwd" --log-opt max-size=1m \
+        -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 -e SE_VNC_PASSWORD="$vnc_pwd" --log-opt max-size=1m \
         --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
       else
         echo -e "${YELLOW}VNC function turned off${PLAIN}"
@@ -208,13 +212,13 @@ node() {
     read -p "Enter your choice, leave blank for No(y/N)：" vnc
     if [ "$vnc" = "y" ] ;then
       echo -e "${YELLOW}VNC function turned on${PLAIN}"
-      read -p "Enter the password for VNC connection(leave blank for default password 'secret'):" vncpwd
+      read -s -p "Enter the password for VNC connection(leave blank for default password 'secret'):" vncpwd
+      echo
       if [ "$vncpwd" = "" ] ;then
         vncpwd="secret"
       fi
-      echo -e "Set VNC password to ${BLUE}" $vncpwd "${PLAIN}"
       echo -e "${BLUE}Start deploying!${PLAIN}"
-      docker run -d --name=wd -p $node_port:$node_port -p 5900:5900 -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 -e SE_VNC_PASSWORD=$vncpwd --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
+      docker run -d --name=wd -p $node_port:$node_port -p 5900:5900 -e SE_NODE_HOST=$address -e SE_EVENT_BUS_HOST=$hub_address -e SE_EVENT_BUS_PUBLISH_PORT=$port1 -e SE_EVENT_BUS_SUBSCRIBE_PORT=$port2 -e SE_NODE_PORT=$node_port -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 -e SE_VNC_VIEW_ONLY=1 -e SE_VNC_PASSWORD="$vncpwd" --log-opt max-size=1m --log-opt max-file=1 --shm-size="$memory" --restart=always $docker_node
     else
       echo -e "${YELLOW}VNC function turned off${PLAIN}"
       echo -e "${BLUE}Start deploying!${PLAIN}"
@@ -264,7 +268,8 @@ standalone() {
     echo -e "${BLUE}Enter username: ${PLAIN}"
     read username
     echo -e "${BLUE}Enter password: ${PLAIN}"
-    read password
+    read -s password
+    echo
     docker run -d --name=webdriver -p $port:4444 --shm-size="$memory" --restart=always \
       -e SE_NODE_MAX_SESSIONS=$number -e SE_NODE_OVERRIDE_MAX_SESSIONS=true -e SE_SESSION_RETRY_INTERVAL=1 \
       -e SE_START_VNC=false -e SE_OPTS="--username $username --password $password" \
@@ -353,10 +358,10 @@ else
       echo -e "${RED}Install cancelled${PLAIN}"
       exit 1
     else
-      echo -e "${BLUE}Start installing...${PLAIN}"
-      docker version > /dev/null || curl -fsSL get.docker.com | bash
-      systemctl enable docker && systemctl restart docker
-      echo -e "${BLUE}Docker${GREEN} install complete${PLAIN}"
+      echo -e "${YELLOW}Automatic Docker installation has been disabled for security reasons.${PLAIN}"
+      echo -e "${YELLOW}Please install Docker using your system package manager or Docker's official documentation:${PLAIN}"
+      echo -e "${BLUE}https://docs.docker.com/engine/install/${PLAIN}"
+      exit 1
     fi
   fi
 fi

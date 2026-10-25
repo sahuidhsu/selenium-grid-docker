@@ -8,7 +8,7 @@
     </a>
     <img src="https://img.shields.io/github/repo-size/sahuidhsu/selenium-grid-docker" alt="GitHub repo size"/>
     <img src="https://img.shields.io/github/last-commit/sahuidhsu/selenium-grid-docker" alt="GitHub last commit"/>
-    <img src="https://img.shields.io/badge/version-2.2-blue" alt="current version"/>
+    <img src="https://img.shields.io/badge/version-2.3-blue" alt="current version"/>
 </p>
 <h3 align="center"><a href="README.md">中文文档</a> | English </h3>
 <h3 align="center">A convenient and quick Selenium WebDriver Docker deployment script </h3>
@@ -16,6 +16,9 @@
 <h4 align="center">Architecture supported: x86_64, arm64, arm32v7</h4>
 
 ## How to use：
+> [!IMPORTANT]
+> For security reasons, the script does not auto-install Docker. Install Docker first via your package manager or Docker's official docs.
+
 ### One-Enter Deployment without Interaction
 #### Deploying Hub
 ```shell
@@ -76,7 +79,7 @@ curl -Ls -o wd_en https://tian-shen.me/wd_en && chmod +x wd_en && ./wd_en
 ```
 
 ## To Do List
-- [x] Install Docker
+- [x] Check Docker environment and prompt for manual installation
 - [x] Quickly deploy Selenium Grid Hub or Node
 - [x] Automatically detect the system architecture and use the corresponding image
 - [x] Quickly update Selenium Grid Hub or Node (provided that it is deployed using this script)
