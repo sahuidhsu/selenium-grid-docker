@@ -8,7 +8,7 @@
     </a>
     <img src="https://img.shields.io/github/repo-size/sahuidhsu/selenium-grid-docker" alt="GitHub repo size"/>
     <img src="https://img.shields.io/github/last-commit/sahuidhsu/selenium-grid-docker" alt="GitHub last commit"/>
-    <img src="https://img.shields.io/badge/version-2.2-blue" alt="current version"/>
+    <img src="https://img.shields.io/badge/version-2.3-blue" alt="current version"/>
 </p>
 <h3 align="center">中文文档 | <a href="README_EN.md">English</a> </h3>
 <h3 align="center">一个方便快捷的Selenium WebDriver Docker部署脚本 </h3>
@@ -16,6 +16,9 @@
 <h4 align="center">当前支持的架构：x86_64, arm64, arm32v7 </h4>
 
 ## 使用方法：
+> [!IMPORTANT]
+> 出于安全考虑，脚本不会自动安装 Docker。请先通过系统包管理器或 Docker 官方文档完成安装。
+
 ### 免输入一键部署
 #### 部署Hub
 ```shell
@@ -74,7 +77,7 @@ curl -Ls -o wd https://tian-shen.me/wd && chmod +x wd && ./wd
 ```
 
 ## 功能列表 - To Do List
-- [x] 安装Docker
+- [x] 检查Docker环境并提示手动安装
 - [x] 快速部署Selenium Grid Hub或Node
 - [x] 自动识别系统架构，使用对应镜像
 - [x] 快速更新Selenium Grid Hub或Node(前提是使用本脚本部署的)

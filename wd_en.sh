@@ -3,7 +3,7 @@
 # Selenium Grid Auto Deploy Script
 # Author: LTY_CK_TS(https://tian-shen.me/)
 # Date: 01/03/2023
-# Update Date：26/12/2024
+# Update Date：25/10/2026
 # Copyright © 2024 by LTY_CK_TS, All Rights Reserved.
 ###
 RED='\033[0;31m'
@@ -11,7 +11,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 PLAIN='\033[0m'
 BLUE="\033[36m"
-VERSION="2.2"
+VERSION="2.3"
 
 not_root() {
   echo -e "${YELLOW}Warning:${PLAIN}not running in root privilege, but it seems docker command can be used directly"
